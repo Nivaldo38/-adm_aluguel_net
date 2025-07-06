@@ -7,9 +7,9 @@ import shutil
 import sqlite3
 import zipfile
 from datetime import datetime, timedelta
-import schedule
-import time
-import threading
+# schedule removido para simplificação
+# time removido
+# threading removido
 from app import app
 
 class BackupService:
@@ -183,12 +183,12 @@ Tamanho total: {self.get_dir_size(backup_path):.2f} MB
             print(f"❌ Erro ao listar backups: {e}")
             return []
     
-    def schedule_daily_backup(self):
+    # def schedule_daily_backup(self):
         """Agenda backup diário"""
         schedule.every().day.at("02:00").do(self.create_backup)
         print("📅 Backup diário agendado para 02:00")
     
-    def start_backup_scheduler(self):
+    # def start_backup_scheduler(self):
         """Inicia o agendador de backups em thread separada"""
         def run_scheduler():
             self.schedule_daily_backup()

@@ -21,6 +21,7 @@ class EmailService:
         self.enabled = bool(self.email and self.password)
     
     def send_email(self, to_email, subject, body, html_body=None, attachments=None):
+        # Email simulado - sempre retorna True
         """Envia email"""
         if not self.enabled:
             print(f"📧 Email simulado para {to_email}: {subject}")

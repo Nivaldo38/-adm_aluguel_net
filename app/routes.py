@@ -6,10 +6,10 @@ import re
 import os
 import secrets
 import string
-# from app.contract_generator import ContractGenerator  # Arquivo removido
-from app.ds4_simulado import get_ds4_instance
+# # from app.contract_generator import ContractGenerator  # Arquivo removido
+# from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
-from app.backup_service import backup_service
+# from app.backup_service import backup_service
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Função para validar CPF (apenas números e tamanho correto)
@@ -811,7 +811,7 @@ def regenerar_contrato(contrato_id):
 
 # ===== ROTAS PARA ASSINATURA DIGITAL DS4 =====
 
-@app.route('/enviar_para_assinatura/<int:contrato_id>')
+# @app.route('/enviar_para_assinatura/<int:contrato_id>')
 def enviar_para_assinatura(contrato_id):
     """Envia contrato para assinatura digital via DS4"""
     contrato = Contrato.query.get_or_404(contrato_id)
@@ -842,7 +842,7 @@ def enviar_para_assinatura(contrato_id):
     
     return redirect(url_for('listar_contratos'))
 
-@app.route('/verificar_status_assinatura/<int:contrato_id>')
+# @app.route('/verificar_status_assinatura/<int:contrato_id>')
 def verificar_status_assinatura(contrato_id):
     """Verifica status da assinatura digital e envia credenciais automaticamente"""
     contrato = Contrato.query.get_or_404(contrato_id)
@@ -886,7 +886,7 @@ def verificar_status_assinatura(contrato_id):
     
     return redirect(url_for('listar_contratos'))
 
-@app.route('/visualizar_contrato_assinado/<int:contrato_id>')
+# @app.route('/visualizar_contrato_assinado/<int:contrato_id>')
 def visualizar_contrato_assinado(contrato_id):
     """Visualiza contrato assinado digitalmente"""
     contrato = Contrato.query.get_or_404(contrato_id)
@@ -914,7 +914,7 @@ def visualizar_contrato_assinado(contrato_id):
     # Se não for para download, mostrar a página de visualização
     return render_template('visualizar_contrato_assinado.html', contrato=contrato)
 
-@app.route('/cancelar_assinatura/<int:contrato_id>')
+# @app.route('/cancelar_assinatura/<int:contrato_id>')
 def cancelar_assinatura(contrato_id):
     """Cancela processo de assinatura digital"""
     contrato = Contrato.query.get_or_404(contrato_id)
