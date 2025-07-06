@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrato Assinado - Sistema de Aluguel</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .contract-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #28a745;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+            min-width: 150px;
+        }
+        .info-value {
+            color: #212529;
+            text-align: right;
+        }
+        .signature-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #c3e6cb;
+        }
+        .signature-status h3 {
+            margin: 0 0 10px 0;
+            color: #155724;
+        }
+        .signature-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .signature-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+        }
+        .signature-item h4 {
+            margin: 0 0 10px 0;
+            color: #155724;
+            font-size: 1em;
+        }
+        .signature-item p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        .pdf-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .pdf-preview img {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+        .pdf-preview h3 {
+            color: #495057;
+            margin: 10px 0;
+        }
+        .pdf-preview p {
+            color: #6c757d;
+            margin: 5px 0;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .back-link a {
+            color: #6c757d;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link a:hover {
+            color: #495057;
+        }
+        @media (max-width: 768px) {
+            .signature-details {
+                grid-template-columns: 1fr;
+            }
+            .actions {
+                flex-direction: column;
+            }
+            .info-row {
+                flex-direction: column;
+                text-align: left;
+            }
+            .info-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✅ Contrato Assinado</h1>
+            <p>Documento assinado digitalmente com sucesso</p>
+        </div>
+        
+        <div class="content">
+            <!-- Status da Assinatura -->
+            <div class="signature-status">
+                <h3>🎯 Status da Assinatura Digital</h3>
+                <p><strong>Status:</strong> ✅ Assinado por todas as partes</p>
+                <p><strong>Data de Assinatura:</strong> {{ contrato.data_assinatura_inquilino.strftime('%d/%m/%Y %H:%M:%S') if contrato.data_assinatura_inquilino else 'N/A' }}</p>
+                <p><strong>Envelope ID:</strong> {{ contrato.envelope_id }}</p>
+                
+                <div class="signature-details">
+                    <div class="signature-item">
+                        <h4>👨‍💼 Locador (Proprietário)</h4>
+                        <p><strong>Nome:</strong> {{ contrato.proprietario_nome }}</p>
+                        <p><strong>Status:</strong> ✅ Assinado</p>
+                        <p><strong>Data:</strong> {{ contrato.data_assinatura_proprietario.strftime('%d/%m/%Y %H:%M:%S') if contrato.data_assinatura_proprietario else 'N/A' }}</p>
+                    </div>
+                    <div class="signature-item">
+                        <h4>👤 Locatário (Inquilino)</h4>
+                        <p><strong>Nome:</strong> {{ contrato.inquilino.nome }}</p>
+                        <p><strong>Status:</strong> ✅ Assinado</p>
+                        <p><strong>Data:</strong> {{ contrato.data_assinatura_inquilino.strftime('%d/%m/%Y %H:%M:%S') if contrato.data_assinatura_inquilino else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informações do Contrato -->
+            <div class="contract-info">
+                <h3>📄 Detalhes do Contrato</h3>
+                <div class="info-row">
+                    <span class="info-label">👤 Inquilino:</span>
+                    <span class="info-value">{{ contrato.inquilino.nome }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🏢 Unidade:</span>
+                    <span class="info-value">{{ contrato.unidade.nome }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Local:</span>
+                    <span class="info-value">{{ contrato.unidade.local.nome }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">💰 Valor Aluguel:</span>
+                    <span class="info-value">R$ {{ '%.2f'|format(contrato.valor_aluguel|float) }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📅 Período:</span>
+                    <span class="info-value">{{ contrato.data_inicio.strftime('%d/%m/%Y') }} a {{ contrato.data_fim.strftime('%d/%m/%Y') if contrato.data_fim else 'Indeterminado' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📅 Vencimento:</span>
+                    <span class="info-value">{{ contrato.dia_vencimento }}º de cada mês</span>
+                </div>
+            </div>
+            
+            <!-- Preview do PDF -->
+            <div class="pdf-preview">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiByeD0iOCIgZmlsbD0iI0Y4RjlGQSIvPgo8cGF0aCBkPSJNNDAgMjBDNDQuNDE4MyAyMCA0OCAyMy41ODE3IDQ4IDI4VjQ4QzQ4IDUyLjQxODMgNDQuNDE4MyA1NiA0MCA1NkMzNS41ODE3IDU2IDMyIDUyLjQxODMgMzIgNDhWMjhDMzIgMjMuNTgxNyAzNS41ODE3IDIwIDQwIDIwWiIgZmlsbD0iI0Q0RURBQSIvPgo8cGF0aCBkPSJNNDAgMjhDNDIuMjA5MSAyOCA0NCAyOS43OTA5IDQ0IDMyQzQ0IDM0LjIwOTEgNDIuMjA5MSAzNiA0MCAzNkMzNy43OTA5IDM2IDM2IDM0LjIwOTEgMzYgMzJDMzYgMjkuNzkwOSAzNy43OTA5IDI4IDQwIDI4WiIgZmlsbD0iIzE1NTcyNCIvPgo8cGF0aCBkPSJNMzYgNDBDMzYgMzcuNzkwOSAzNy43OTA5IDM2IDQwIDM2QzQyLjIwOTEgMzYgNDQgMzcuNzkwOSA0NCA0MEM0NCA0Mi4yMDkxIDQyLjIwOTEgNDQgNDAgNDRDMzcuNzkwOSA0NCAzNiA0Mi4yMDkxIDM2IDQwWiIgZmlsbD0iIzE1NTcyNCIvPgo8L3N2Zz4K" alt="PDF Icon">
+                <h3>📄 Contrato Assinado Digitalmente</h3>
+                <p>Este documento foi assinado digitalmente por todas as partes</p>
+                <p><strong>Arquivo:</strong> {{ contrato.arquivo_contrato_assinado.split('/')[-1] if contrato.arquivo_contrato_assinado else 'N/A' }}</p>
+            </div>
+            
+            <!-- Ações -->
+            <div class="actions">
+                <a href="{{ url_for('visualizar_contrato_assinado', contrato_id=contrato.id) }}" class="btn btn-primary" target="_blank">
+                    📄 Baixar PDF Assinado
+                </a>
+                <a href="{{ url_for('visualizar_contrato', contrato_id=contrato.id) }}" class="btn btn-secondary" target="_blank">
+                    📋 Ver Contrato Original
+                </a>
+                <a href="{{ url_for('listar_contratos') }}" class="btn btn-success">
+                    📋 Voltar aos Contratos
+                </a>
+            </div>
+            
+            <div class="back-link">
+                <a href="{{ url_for('index') }}">🏠 Voltar para o início</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

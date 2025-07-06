@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Unidade</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 40px; }
+        .form-container {
+            max-width: 420px; margin: auto; background: #fff; border-radius: 8px;
+            padding: 28px 32px; box-shadow: 0 0 12px rgba(0,0,0,0.07);
+        }
+        h2 { text-align: center; margin-bottom: 18px; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        input[type="text"], select {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 6px;
+        }
+        button {
+            background: #1976d2; color: #fff; border: none; padding: 10px 18px; margin-top: 20px;
+            border-radius: 4px; font-size: 16px; cursor: pointer; width: 100%;
+        }
+        button:hover { background: #12509a; }
+        .voltar-link {
+            display: block; text-align: center; margin-top: 20px; color: #1976d2; text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Editar Unidade</h2>
+        <form method="POST">
+            <label for="nome">Nome da Unidade:</label>
+            <input type="text" id="nome" name="nome" value="{{ unidade.nome }}" required>
+            
+            <label for="status">Status da Unidade:</label>
+            <select id="status" name="status" required>
+                <option value="livre" {% if unidade.status == 'livre' %}selected{% endif %}>🟢 Livre</option>
+                <option value="ocupada" {% if unidade.status == 'ocupada' %}selected{% endif %}>🔴 Ocupada</option>
+                <option value="manutencao" {% if unidade.status == 'manutencao' %}selected{% endif %}>🟡 Manutenção</option>
+            </select>
+            
+            <button type="submit">Salvar Alterações</button>
+        </form>
+        <a class="voltar-link" href="{{ url_for('listar_unidades', local_id=unidade.local_id) }}">&larr; Voltar para unidades</a>
+    </div>
+</body>
+</html>

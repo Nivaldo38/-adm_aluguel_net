@@ -1,0 +1,93 @@
+{% extends "base_mobile.html" %}
+
+{% block header_title %}Dashboard Mobile{% endblock %}
+
+{% block content %}
+<div class="mobile-card">
+    <h2>📊 Dashboard</h2>
+    
+    <div class="row">
+        <div class="col-6">
+            <div class="mobile-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3 style="color: white;">{{ contratos|length }}</h3>
+                <p style="color: white; margin: 0;">Contratos</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+                <h3 style="color: white;">{{ inquilinos|length }}</h3>
+                <p style="color: white; margin: 0;">Inquilinos</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-6">
+            <div class="mobile-card" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white;">
+                <h3 style="color: white;">{{ locais|length }}</h3>
+                <p style="color: white; margin: 0;">Locais</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card" style="background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%); color: white;">
+                <h3 style="color: white;">{{ boletos|length }}</h3>
+                <p style="color: white; margin: 0;">Boletos</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mobile-card">
+    <h2>🚀 Ações Rápidas</h2>
+    
+    <a href="{{ url_for('mobile_contratos') }}" class="mobile-btn">
+        📄 Ver Contratos
+    </a>
+    
+    <a href="{{ url_for('mobile_inquilinos') }}" class="mobile-btn">
+        👤 Ver Inquilinos
+    </a>
+    
+    <a href="{{ url_for('listar_boletos') }}" class="mobile-btn">
+        💰 Ver Boletos
+    </a>
+    
+    <a href="{{ url_for('backup_page') }}" class="mobile-btn secondary">
+        💾 Backup
+    </a>
+</div>
+
+<div class="mobile-card">
+    <h2>📈 Estatísticas</h2>
+    
+    <div class="row">
+        <div class="col-6">
+            <div class="mobile-card">
+                <h4>Contratos Ativos</h4>
+                <p class="text-success">{{ contratos_ativos|length }}</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card">
+                <h4>Boletos Pendentes</h4>
+                <p class="text-warning">{{ boletos_pendentes|length }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-6">
+            <div class="mobile-card">
+                <h4>Contratos Assinados</h4>
+                <p class="text-info">{{ contratos_assinados|length }}</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="mobile-card">
+                <h4>Total Recebido</h4>
+                <p class="text-success">R$ {{ total_recebido|default('0.00') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

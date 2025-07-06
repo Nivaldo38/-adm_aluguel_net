@@ -1,0 +1,19 @@
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'chave_secreta_segura'
+
+# Caminho absoluto para criar o banco na raiz do projeto
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, '..', 'adm_aluguel.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # evitar warning
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)  # adiciona o Flask-Migrate
+
+from app import routes, models

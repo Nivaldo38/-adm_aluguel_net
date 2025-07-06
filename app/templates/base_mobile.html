@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{% block title %}Sistema de Aluguel{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Header Mobile */
+        .mobile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .mobile-nav {
+            background: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+        
+        .mobile-nav ul {
+            display: flex;
+            list-style: none;
+            justify-content: space-around;
+        }
+        
+        .mobile-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            font-size: 0.8rem;
+            padding: 5px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav a:hover,
+        .mobile-nav a.active {
+            color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        .mobile-nav i {
+            font-size: 1.2rem;
+            margin-bottom: 3px;
+        }
+        
+        /* Container principal */
+        .mobile-container {
+            margin-top: 70px;
+            margin-bottom: 80px;
+            padding: 15px;
+            min-height: calc(100vh - 150px);
+        }
+        
+        /* Cards */
+        .mobile-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-card h2 {
+            color: #333;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        /* Botões */
+        .mobile-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .mobile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .mobile-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .mobile-btn.success {
+            background: #28a745;
+        }
+        
+        .mobile-btn.danger {
+            background: #dc3545;
+        }
+        
+        .mobile-btn.warning {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        /* Formulários */
+        .mobile-form {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-form-group {
+            margin-bottom: 15px;
+        }
+        
+        .mobile-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .mobile-form-group input,
+        .mobile-form-group select,
+        .mobile-form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .mobile-form-group input:focus,
+        .mobile-form-group select:focus,
+        .mobile-form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        /* Tabelas responsivas */
+        .mobile-table {
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-table th,
+        .mobile-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .mobile-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        /* Status badges */
+        .mobile-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .mobile-badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .mobile-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .mobile-badge.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .mobile-badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        /* Alertas */
+        .mobile-alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .mobile-alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .mobile-alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .mobile-alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .mobile-alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Loading */
+        .mobile-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .mobile-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Pull to refresh */
+        .mobile-pull-refresh {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        /* Swipe gestures */
+        .mobile-swipe-area {
+            touch-action: pan-y;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .mobile-container {
+                padding: 10px;
+            }
+            
+            .mobile-card,
+            .mobile-form {
+                padding: 15px;
+            }
+            
+            .mobile-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #fff;
+            }
+            
+            .mobile-card,
+            .mobile-form,
+            .mobile-table {
+                background: #2d2d2d;
+                color: #fff;
+            }
+            
+            .mobile-form-group input,
+            .mobile-form-group select,
+            .mobile-form-group textarea {
+                background: #3d3d3d;
+                color: #fff;
+                border-color: #555;
+            }
+            
+            .mobile-nav {
+                background: #2d2d2d;
+            }
+            
+            .mobile-nav a {
+                color: #ccc;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header Mobile -->
+    <header class="mobile-header">
+        <h1>{% block header_title %}Sistema de Aluguel{% endblock %}</h1>
+    </header>
+    
+    <!-- Container principal -->
+    <div class="mobile-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mobile-alert {{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Navegação Mobile -->
+    <nav class="mobile-nav">
+        <ul>
+            <li><a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+                <i>🏠</i>
+                <span>Início</span>
+            </a></li>
+            <li><a href="{{ url_for('listar_contratos') }}" class="{% if request.endpoint == 'listar_contratos' %}active{% endif %}">
+                <i>📄</i>
+                <span>Contratos</span>
+            </a></li>
+            <li><a href="{{ url_for('listar_inquilinos') }}" class="{% if request.endpoint == 'listar_inquilinos' %}active{% endif %}">
+                <i>👤</i>
+                <span>Inquilinos</span>
+            </a></li>
+            <li><a href="{{ url_for('locais') }}" class="{% if request.endpoint == 'locais' %}active{% endif %}">
+                <i>🏢</i>
+                <span>Locais</span>
+            </a></li>
+            <li><a href="{{ url_for('boletos') }}" class="{% if request.endpoint == 'boletos' %}active{% endif %}">
+                <i>💰</i>
+                <span>Boletos</span>
+            </a></li>
+        </ul>
+    </nav>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

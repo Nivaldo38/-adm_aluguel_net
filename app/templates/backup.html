@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciamento de Backup{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3><i class="fas fa-database"></i> Gerenciamento de Backup</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Criar Backup -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h5><i class="fas fa-plus"></i> Criar Backup</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Crie um backup completo do sistema incluindo:</p>
+                                    <ul>
+                                        <li>Banco de dados SQLite</li>
+                                        <li>Contratos PDF</li>
+                                        <li>Configurações do sistema</li>
+                                    </ul>
+                                    <a href="{{ url_for('criar_backup') }}" class="btn btn-success">
+                                        <i class="fas fa-download"></i> Criar Backup
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5><i class="fas fa-info-circle"></i> Informações</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Backup Automático:</strong> Diário às 02:00</p>
+                                    <p><strong>Retenção:</strong> 30 backups mais recentes</p>
+                                    <p><strong>Local:</strong> Pasta 'backups'</p>
+                                    <p><strong>Formato:</strong> Arquivo ZIP</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de Backups -->
+                    <div class="card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5><i class="fas fa-list"></i> Backups Disponíveis</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if backups %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Arquivo</th>
+                                                <th>Tamanho</th>
+                                                <th>Data de Criação</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for backup in backups %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-file-archive text-primary"></i>
+                                                    {{ backup.filename }}
+                                                </td>
+                                                <td>{{ backup.size_mb }} MB</td>
+                                                <td>{{ backup.created }}</td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a href="{{ url_for('baixar_backup', filename=backup.filename) }}" 
+                                                           class="btn btn-sm btn-primary" title="Baixar">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                        <a href="{{ url_for('restaurar_backup', filename=backup.filename) }}" 
+                                                           class="btn btn-sm btn-warning" title="Restaurar"
+                                                           onclick="return confirm('Tem certeza? Isso substituirá os dados atuais.')">
+                                                            <i class="fas fa-undo"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-database fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Nenhum backup encontrado.</p>
+                                    <a href="{{ url_for('criar_backup') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus"></i> Criar Primeiro Backup
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Restauração</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Atenção!</strong> A restauração substituirá todos os dados atuais.</p>
+                <p>Esta ação não pode ser desfeita. Deseja continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="confirmRestore">Confirmar Restauração</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Confirmar restauração
+    const restoreButtons = document.querySelectorAll('[href*="restaurar_backup"]');
+    restoreButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            const confirmBtn = document.getElementById('confirmRestore');
+            
+            confirmBtn.onclick = function() {
+                window.location.href = button.href;
+            };
+            
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %} 

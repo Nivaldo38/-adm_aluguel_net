@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>Cadastrar Inquilino</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; }
+        .container { max-width: 720px; margin: 32px auto; background: #fff; border-radius: 10px; box-shadow: 0 4px 24px #0002; padding: 36px; }
+        h1 { color: #1976d2; text-align: center; margin-bottom: 24px; }
+        form label { display: block; margin-top: 14px; }
+        form input, form select { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #c0c8d2; margin-top: 6px; font-size: 1em; }
+        .btn { margin-top: 28px; background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 14px; width: 100%; font-size: 1.08em; font-weight: bold; cursor: pointer; }
+        .btn:hover { background: #125ea2; }
+        .back { margin-top: 14px; display: block; text-align: right; }
+        /* Flash messages */
+        .alert { padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+        .alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+        .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+    </style>
+    <script>
+        // Busca endereço automático via CEP
+        function buscarEndereco() {
+            let cep = document.getElementById('cep').value;
+            cep = cep.replace(/\D/g, '');
+            if (cep.length === 8) {
+                fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            let enderecoCompleto = data.logradouro;
+                            if(data.bairro) enderecoCompleto += ', ' + data.bairro;
+                            if(data.localidade) enderecoCompleto += ', ' + data.localidade;
+                            if(data.uf) enderecoCompleto += ' - ' + data.uf;
+                            document.getElementById('endereco').value = enderecoCompleto;
+                        } else {
+                            alert('CEP não encontrado.');
+                            document.getElementById('endereco').value = '';
+                        }
+                    });
+            }
+        }
+
+        // Filtra unidades pelo local selecionado
+        function filtrarUnidades() {
+            var local_id = document.getElementById('local_id').value;
+            var unidadeSelect = document.getElementById('unidade_id');
+            unidadeSelect.innerHTML = '<option value="">Selecione a Unidade</option>';
+            if(local_id) {
+                fetch('/api/unidades/' + local_id)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function(unidade) {
+                            var option = document.createElement('option');
+                            option.value = unidade.id;
+                            option.text = unidade.nome;
+                            unidadeSelect.appendChild(option);
+                        });
+                    });
+            }
+        }
+
+        // Calcula e mostra a idade automaticamente ao preencher a data de nascimento
+        function calcularIdade() {
+            let dataInput = document.getElementById('data_nascimento').value;
+            if (dataInput) {
+                let hoje = new Date();
+                let nascimento = new Date(dataInput);
+                let idade = hoje.getFullYear() - nascimento.getFullYear();
+                let m = hoje.getMonth() - nascimento.getMonth();
+                if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+                    idade--;
+                }
+                document.getElementById('idade').value = idade >= 0 ? idade : '';
+            } else {
+                document.getElementById('idade').value = '';
+            }
+        }
+
+        window.onload = function() {
+            filtrarUnidades();
+            calcularIdade();
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastrar Inquilino</h1>
+
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" novalidate>
+            <label for="local_id">Local:</label>
+            <select name="local_id" id="local_id" required onchange="filtrarUnidades()">
+                <option value="">Selecione o Local</option>
+                {% for local in locais %}
+                    <option value="{{ local.id }}">{{ local.nome }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="unidade_id">Unidade:</label>
+            <select name="unidade_id" id="unidade_id" required>
+                <option value="">Selecione a Unidade</option>
+            </select>
+
+            <label for="nome">Nome:</label>
+            <input type="text" name="nome" required>
+
+            <label for="cpf">CPF (somente números):</label>
+            <input type="text" name="cpf" maxlength="11" pattern="\d{11}" title="Digite 11 dígitos numéricos" required>
+
+            <label for="data_nascimento">Data de Nascimento:</label>
+            <input type="date" name="data_nascimento" id="data_nascimento" required onchange="calcularIdade()">
+
+            <label for="idade">Idade:</label>
+            <input type="number" name="idade" id="idade" readonly>
+
+            <label for="cep">CEP:</label>
+            <input type="text" name="cep" id="cep" maxlength="8" pattern="\d{8}" title="Digite 8 dígitos numéricos" required onblur="buscarEndereco()">
+
+            <label for="endereco">Endereço:</label>
+            <input type="text" name="endereco" id="endereco" required>
+
+            <label for="telefone">Telefone (somente números):</label>
+            <input type="tel" name="telefone" pattern="\d{10,11}" title="Digite 10 ou 11 dígitos numéricos" required>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" required>
+
+            <button type="submit" class="btn">Cadastrar Inquilino</button>
+        </form>
+
+        <a href="{{ url_for('index') }}" class="back">Voltar</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastrar Nova Unidade</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 40px; }
+        .form-container {
+            max-width: 430px; margin: auto; background: #fff; border-radius: 10px;
+            padding: 32px 35px; box-shadow: 0 0 12px rgba(0,0,0,0.09);
+        }
+        h1 { text-align: center; margin-bottom: 22px; }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input[type="text"], select {
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-top: 7px;
+        }
+        button {
+            background: #1976d2; color: #fff; border: none; padding: 10px 18px; margin-top: 28px;
+            border-radius: 5px; font-size: 17px; cursor: pointer; width: 100%;
+        }
+        button:hover { background: #12509a; }
+        .voltar-link {
+            display: block; text-align: center; margin-top: 28px; color: #1976d2; text-decoration: none;
+        }
+        
+        /* Unidades existentes */
+        .unidades-lista {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .unidade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .unidade-nome {
+            font-weight: bold;
+        }
+        .unidade-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-livre { background: #d4edda; color: #155724; }
+        .status-ocupada { background: #f8d7da; color: #721c24; }
+        .status-manutencao { background: #fff3cd; color: #856404; }
+        
+        /* Alertas */
+        .alert {
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: opacity 0.5s ease;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>🏠 Cadastrar Nova Unidade</h1>
+        
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Unidades já cadastradas -->
+        <div id="unidades-existentes" style="display: none;">
+            <h3>📋 Unidades já cadastradas neste local:</h3>
+            <div id="lista-unidades" class="unidades-lista"></div>
+        </div>
+        
+        <form method="POST">
+            <label for="nome">Nome da Unidade:</label>
+            <input type="text" name="nome" id="nome" required placeholder="Ex: Kitnet 1, Apto 101, Casa 5">
+            <small style="color: #666; font-size: 12px;">⚠️ O nome deve ser único dentro do local selecionado</small>
+            
+            <label for="local_id">Local:</label>
+            <select name="local_id" id="local_id" required onchange="carregarUnidades()">
+                <option value="">Selecione o Local</option>
+                {% for local in locais %}
+                    <option value="{{ local.id }}"
+                        {% if local_id and local.id == local_id %}selected{% endif %}>
+                        {{ local.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+            
+            <label for="status">Status da Unidade:</label>
+            <select name="status" required>
+                <option value="livre">🟢 Livre</option>
+                <option value="ocupada">🔴 Ocupada</option>
+                <option value="manutencao">🟡 Manutenção</option>
+            </select>
+            
+            <button type="submit">Cadastrar</button>
+        </form>
+        <a class="voltar-link" href="{{ url_for('index') }}">← Voltar para página inicial</a>
+    </div>
+    
+    <script>
+        function carregarUnidades() {
+            const localId = document.getElementById('local_id').value;
+            const unidadesDiv = document.getElementById('unidades-existentes');
+            const listaUnidades = document.getElementById('lista-unidades');
+            
+            if (!localId) {
+                unidadesDiv.style.display = 'none';
+                return;
+            }
+            
+            // Fazer requisição para buscar unidades do local
+            fetch(`/api/unidades/${localId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        listaUnidades.innerHTML = '';
+                        data.forEach(unidade => {
+                            const item = document.createElement('div');
+                            item.className = 'unidade-item';
+                            
+                            const statusEmoji = {
+                                'livre': '🟢',
+                                'ocupada': '🔴', 
+                                'manutencao': '🟡'
+                            };
+                            
+                            item.innerHTML = `
+                                <span class="unidade-nome">${unidade.nome}</span>
+                                <span class="unidade-status status-${unidade.status}">
+                                    ${statusEmoji[unidade.status]} ${unidade.status}
+                                </span>
+                            `;
+                            listaUnidades.appendChild(item);
+                        });
+                        unidadesDiv.style.display = 'block';
+                    } else {
+                        unidadesDiv.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar unidades:', error);
+                    unidadesDiv.style.display = 'none';
+                });
+        }
+        
+        // Carregar unidades se já tiver um local selecionado
+        window.onload = function() {
+            if (document.getElementById('local_id').value) {
+                carregarUnidades();
+            }
+            
+            // Limpar mensagens flash após 5 segundos
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+        };
+    </script>
+</body>
+</html>

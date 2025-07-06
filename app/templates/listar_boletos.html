@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Boletos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f8fb; }
+        .container { max-width: 1200px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px #0002; padding: 38px; }
+        h1 { color: #1976d2; text-align: center; margin-bottom: 24px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        th, td { padding: 10px 7px; border-bottom: 1px solid #e3e3e3; text-align: left; }
+        th { background: #f3f6fa; color: #1976d2; }
+        tr:hover { background: #f6fbff; }
+        .btn-new { background: #1976d2; color: #fff; margin-bottom: 14px; text-decoration: none; display: inline-block; padding: 8px 24px; border-radius: 6px; }
+        .filter-form { margin-bottom: 14px; }
+        .back { margin-top: 16px; display: block; }
+        a.action-btn {
+            margin-right: 8px;
+            text-decoration: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            display: inline-block;
+        }
+        a.edit-btn { background-color: #f0ad4e; }
+        a.delete-btn { background-color: #d9534f; }
+        a.pay-btn { background-color: #5cb85c; }
+        a.cancel-btn { background-color: #6c757d; }
+        a.edit-btn:hover { background-color: #ec971f; }
+        a.delete-btn:hover { background-color: #c9302c; }
+        a.pay-btn:hover { background-color: #4cae4c; }
+        a.cancel-btn:hover { background-color: #5a6268; }
+        
+        /* Alertas */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pendente { background: #fff3cd; color: #856404; }
+        .status-pago { background: #d4edda; color: #155724; }
+        .status-vencido { background: #f8d7da; color: #721c24; }
+        .status-cancelado { background: #e2e3e5; color: #383d41; }
+        
+        /* Melhorias na tabela */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1976d2;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* Botões de ação */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+    </style>
+    <script>
+        // Auto-limpar mensagens flash após 5 segundos
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 500);
+            });
+        }, 5000);
+
+        // Destacar boletos vencidos
+        document.addEventListener('DOMContentLoaded', function() {
+            var rows = document.querySelectorAll('tr');
+            rows.forEach(function(row) {
+                var statusCell = row.querySelector('.status-vencido');
+                if (statusCell) {
+                    row.style.backgroundColor = '#fff3cd';
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Gestão de Boletos</h1>
+        
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <a href="{{ url_for('gerar_boletos_lote') }}" class="btn-new">📦 Gerar Boletos em Lote</a>
+            <a href="{{ url_for('index') }}" class="btn-new" style="background: #6c757d;">🏠 Voltar ao Início</a>
+        </div>
+        
+        <!-- Estatísticas -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.total }}</div>
+                <div class="stat-label">Total de Boletos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.pendentes }}</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.pagos }}</div>
+                <div class="stat-label">Pagos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ stats.vencidos }}</div>
+                <div class="stat-label">Vencidos</div>
+            </div>
+        </div>
+        
+        <form method="get" action="{{ url_for('listar_boletos') }}" class="filter-form">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div>
+                    <label for="contrato_id">🔍 Filtrar por Contrato:</label>
+                    <select name="contrato_id" id="contrato_id">
+                        <option value="">Todos os Contratos</option>
+                        {% for contrato in contratos %}
+                            <option value="{{ contrato.id }}" {% if contrato_id == contrato.id %}selected{% endif %}>
+                                {{ contrato.inquilino.nome }} - {{ contrato.unidade.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="status">📋 Filtrar por Status:</label>
+                    <select name="status" id="status">
+                        <option value="">Todos os Status</option>
+                        <option value="pendente" {% if status_filter == 'pendente' %}selected{% endif %}>⏳ Pendente</option>
+                        <option value="pago" {% if status_filter == 'pago' %}selected{% endif %}>✅ Pago</option>
+                        <option value="vencido" {% if status_filter == 'vencido' %}selected{% endif %}>⏰ Vencido</option>
+                        <option value="cancelado" {% if status_filter == 'cancelado' %}selected{% endif %}>❌ Cancelado</option>
+                    </select>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button type="submit" style="background: #1976d2; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">🔍 Aplicar Filtros</button>
+                    <a href="{{ url_for('listar_boletos') }}" style="background: #6c757d; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; margin-left: 10px;">🔄 Limpar</a>
+                </div>
+            </div>
+        </form>
+        
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>👤 Inquilino</th>
+                    <th>🏢 Unidade</th>
+                    <th>📅 Mês/Ano</th>
+                    <th>💰 Valor Total</th>
+                    <th>📅 Vencimento</th>
+                    <th>📋 Status</th>
+                    <th>📊 Detalhes</th>
+                    <th>⚙️ Ações</th>
+                </tr>
+                {% for boleto in boletos %}
+                <tr>
+                    <td>{{ boleto.contrato.inquilino.nome }}</td>
+                    <td>{{ boleto.contrato.unidade.nome }}</td>
+                    <td>{{ boleto.mes_referencia }}</td>
+                    <td>R$ {{ '%.2f'|format(boleto.valor_total) }}</td>
+                    <td>{{ boleto.data_vencimento.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        <span class="status-badge status-{{ boleto.status }}">
+                            {% if boleto.status == 'pendente' %}⏳ Pendente
+                            {% elif boleto.status == 'pago' %}✅ Pago
+                            {% elif boleto.status == 'vencido' %}⏰ Vencido
+                            {% elif boleto.status == 'cancelado' %}❌ Cancelado
+                            {% else %}{{ boleto.status }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <small>
+                            Aluguel: R$ {{ '%.2f'|format(boleto.valor_aluguel) }}<br>
+                            {% if boleto.valor_condominio > 0 %}
+                            Condomínio: R$ {{ '%.2f'|format(boleto.valor_condominio) }}<br>
+                            {% endif %}
+                            {% if boleto.valor_iptu > 0 %}
+                            IPTU: R$ {{ '%.2f'|format(boleto.valor_iptu) }}
+                            {% endif %}
+                        </small>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if boleto.status == 'pendente' %}
+                                <a href="{{ url_for('marcar_pago', boleto_id=boleto.id) }}" class="action-btn pay-btn" onclick="return confirm('Marcar como pago?')">💰 Pago</a>
+                                <a href="{{ url_for('cancelar_boleto', boleto_id=boleto.id) }}" class="action-btn cancel-btn" onclick="return confirm('Cancelar boleto?')">❌ Cancelar</a>
+                            {% endif %}
+                            {% if boleto.link_boleto %}
+                                <a href="{{ boleto.link_boleto }}" target="_blank" class="action-btn edit-btn">📄 Ver Boleto</a>
+                            {% endif %}
+                            <a href="{{ url_for('excluir_boleto', boleto_id=boleto.id) }}" class="action-btn delete-btn" onclick="return confirm('Excluir boleto?')">🗑️ Excluir</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        {% if not boletos %}
+        <div style="text-align: center; padding: 40px; color: #666;">
+            <h3>📭 Nenhum boleto encontrado</h3>
+            <p>Gere boletos para os contratos ativos para começar.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> 

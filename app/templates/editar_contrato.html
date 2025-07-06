@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <title>Editar Contrato</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f7f7f7; }
+        .container { max-width: 720px; margin: 32px auto; background: #fff; border-radius: 10px; box-shadow: 0 4px 24px #0002; padding: 36px; }
+        h1 { color: #1976d2; text-align: center; margin-bottom: 24px; }
+        form label { display: block; margin-top: 14px; }
+        form input, form select, form textarea { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #c0c8d2; margin-top: 6px; font-size: 1em; }
+        .row { display: flex; gap: 18px; }
+        .row > div { flex: 1; }
+        .btn { margin-top: 28px; background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 14px; width: 100%; font-size: 1.08em; font-weight: bold; cursor: pointer; }
+        .btn:hover { background: #125ea2; }
+        .back { margin-top: 14px; display: block; text-align: right; }
+    </style>
+    <script>
+        // Atualiza unidades conforme local selecionado
+        function filtrarUnidades() {
+            var local_id = document.getElementById('local_id').value;
+            var unidadeSelect = document.getElementById('unidade_id');
+            unidadeSelect.innerHTML = '<option value="">Selecione a Unidade</option>';
+            fetch('/api/unidades/' + local_id)
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(function(unidade) {
+                        var option = document.createElement('option');
+                        option.value = unidade.id;
+                        option.text = unidade.nome;
+                        unidadeSelect.appendChild(option);
+                    });
+                });
+        }
+
+        // Ao carregar a página, definir unidades para o local atual
+        window.onload = function() {
+            filtrarUnidades();
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Contrato de Aluguel</h1>
+        <form method="POST">
+            <div class="row">
+                <div>
+                    <label for="local_id">Local:</label>
+                    <select name="local_id" id="local_id" required onchange="filtrarUnidades()">
+                        <option value="">Selecione o Local</option>
+                        {% for local in locais %}
+                            <option value="{{ local.id }}" {% if contrato.unidade.local.id == local.id %}selected{% endif %}>{{ local.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="unidade_id">Unidade:</label>
+                    <select name="unidade_id" id="unidade_id" required>
+                        <option value="">Selecione a Unidade</option>
+                        {% for unidade in unidades %}
+                            <option value="{{ unidade.id }}" {% if contrato.unidade.id == unidade.id %}selected{% endif %}>{{ unidade.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="inquilino_id">Inquilino:</label>
+                    <select name="inquilino_id" id="inquilino_id" required>
+                        <option value="">Selecione o Inquilino</option>
+                        {% for inq in inquilinos %}
+                            <option value="{{ inq.id }}" {% if contrato.inquilino.id == inq.id %}selected{% endif %}>{{ inq.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="valor_aluguel">Valor do Aluguel:</label>
+                    <input type="number" step="0.01" name="valor_aluguel" value="{{ contrato.valor_aluguel }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="taxa_condominio">Taxa de Condomínio:</label>
+                    <input type="number" step="0.01" name="taxa_condominio" value="{{ contrato.taxa_condominio or '' }}">
+                </div>
+                <div>
+                    <label for="taxa_iptu">IPTU Trimestral:</label>
+                    <input type="number" step="0.01" name="taxa_iptu" value="{{ contrato.taxa_iptu or '' }}">
+                </div>
+                <div>
+                    <label for="taxa_assinatura">Taxa de Assinatura/Renovação:</label>
+                    <input type="number" step="0.01" name="taxa_assinatura" value="{{ contrato.taxa_assinatura or '' }}">
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="data_inicio">Data de Início:</label>
+                    <input type="date" name="data_inicio" value="{{ contrato.data_inicio.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div>
+                    <label for="data_fim">Data de Término:</label>
+                    <input type="date" name="data_fim" value="{{ contrato.data_fim.strftime('%Y-%m-%d') if contrato.data_fim else '' }}">
+                </div>
+                <div>
+                    <label for="dia_vencimento">Dia de Vencimento:</label>
+                    <input type="text" name="dia_vencimento" maxlength="2" value="{{ contrato.dia_vencimento }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="situacao">Situação:</label>
+                    <select name="situacao" required>
+                        <option value="ativo" {% if contrato.situacao == 'ativo' %}selected{% endif %}>Ativo</option>
+                        <option value="rescindido" {% if contrato.situacao == 'rescindido' %}selected{% endif %}>Rescindido</option>
+                        <option value="vencido" {% if contrato.situacao == 'vencido' %}selected{% endif %}>Vencido</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="observacoes">Observações:</label>
+                    <input type="text" name="observacoes" value="{{ contrato.observacoes or '' }}">
+                </div>
+            </div>
+            <h3>Dados do Proprietário/Empresa</h3>
+            <div class="row">
+                <div>
+                    <label for="proprietario_nome">Nome:</label>
+                    <input type="text" name="proprietario_nome" value="{{ contrato.proprietario_nome }}" required>
+                </div>
+                <div>
+                    <label for="proprietario_cnpjcpf">CNPJ/CPF:</label>
+                    <input type="text" name="proprietario_cnpjcpf" value="{{ contrato.proprietario_cnpjcpf }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <label for="proprietario_endereco">Endereço:</label>
+                    <input type="text" name="proprietario_endereco" value="{{ contrato.proprietario_endereco }}" required>
+                </div>
+                <div>
+                    <label for="proprietario_email">Email:</label>
+                    <input type="email" name="proprietario_email" value="{{ contrato.proprietario_email or '' }}">
+                </div>
+                <div>
+                    <label for="proprietario_telefone">Telefone:</label>
+                    <input type="text" name="proprietario_telefone" value="{{ contrato.proprietario_telefone or '' }}">
+                </div>
+            </div>
+            <button type="submit" class="btn">Salvar Alterações</button>
+        </form>
+        <a href="{{ url_for('listar_contratos') }}" class="back">Voltar</a>
+    </div>
+</body>
+</html>

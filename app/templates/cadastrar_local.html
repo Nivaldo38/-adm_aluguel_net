@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastrar Novo Local</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            padding: 40px;
+        }
+        .container {
+            max-width: 420px;
+            margin: 48px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 0 16px #bbbef2;
+            padding: 32px 36px 28px 36px;
+        }
+        h1 {
+            text-align: center;
+            color: #1976d2;
+            margin-bottom: 28px;
+            font-size: 2rem;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            font-size: 1rem;
+        }
+        button {
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            padding: 12px 0;
+            border-radius: 7px;
+            font-size: 1.15rem;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.18s;
+            box-shadow: 0 2px 10px #1976d222;
+        }
+        button:hover {
+            background: #145299;
+        }
+        .voltar-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .voltar-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cadastrar Novo Local</h1>
+        <form method="POST">
+            <label for="nome">Nome do Local:</label>
+            <input type="text" name="nome" id="nome" placeholder="Ex: Ed. Morada Azul, Casa 11, etc" required>
+            <button type="submit">Cadastrar</button>
+        </form>
+        <a class="voltar-link" href="{{ url_for('listar_locais') }}">← Voltar para Locais</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Unidades de {{ local.nome }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            padding: 40px;
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.07);
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th {
+            background: #1976d2;
+            color: #fff;
+        }
+        .btn {
+            padding: 6px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #fff;
+            margin: 0 2px;
+            text-decoration: none;
+            transition: background 0.18s;
+        }
+        .btn-editar {
+            background: #fbc02d;
+        }
+        .btn-editar:hover {
+            background: #f9a825;
+        }
+        .btn-excluir {
+            background: #e53935;
+        }
+        .btn-excluir:hover {
+            background: #b71c1c;
+        }
+        .btn-cadastrar {
+            background: #388e3c;
+            display: inline-block;
+            margin-top: 18px;
+        }
+        .btn-cadastrar:hover {
+            background: #2e7d32;
+        }
+        .voltar-link {
+            display: block;
+            margin-top: 18px;
+            color: #1976d2;
+            text-decoration: none;
+        }
+        
+        /* Filtros */
+        .filtros {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+        .filtro-form select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        /* Estatísticas */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-label {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .stat-value.livre { color: #28a745; }
+        .stat-value.ocupada { color: #dc3545; }
+        .stat-value.manutencao { color: #ffc107; }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-badge.livre {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-badge.ocupada {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-badge.manutencao {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        /* Linhas coloridas por status */
+        .status-livre { background: #f8fff8; }
+        .status-ocupada { background: #fff8f8; }
+        .status-manutencao { background: #fffef8; }
+        
+        .sem-inquilino {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏠 Unidades de {{ local.nome }}</h1>
+
+    <!-- Filtros -->
+    <div class="filtros">
+        <h3>🔍 Filtros</h3>
+        <form method="GET" class="filtro-form">
+            <select name="status" onchange="this.form.submit()">
+                <option value="">Todos os status</option>
+                <option value="livre" {% if request.args.get('status') == 'livre' %}selected{% endif %}>🟢 Livre</option>
+                <option value="ocupada" {% if request.args.get('status') == 'ocupada' %}selected{% endif %}>🔴 Ocupada</option>
+                <option value="manutencao" {% if request.args.get('status') == 'manutencao' %}selected{% endif %}>🟡 Manutenção</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-label">Total:</span>
+            <span class="stat-value">{{ unidades|length }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Livres:</span>
+            <span class="stat-value livre">{{ unidades|selectattr('status', 'equalto', 'livre')|list|length }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Ocupadas:</span>
+            <span class="stat-value ocupada">{{ unidades|selectattr('status', 'equalto', 'ocupada')|list|length }}</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Manutenção:</span>
+            <span class="stat-value manutencao">{{ unidades|selectattr('status', 'equalto', 'manutencao')|list|length }}</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nome da Unidade</th>
+                <th>Status</th>
+                <th>Inquilino</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for unidade in unidades %}
+            <tr class="status-{{ unidade.status }}">
+                <td>{{ unidade.nome }}</td>
+                <td>
+                    {% if unidade.status == 'livre' %}
+                        <span class="status-badge livre">🟢 Livre</span>
+                    {% elif unidade.status == 'ocupada' %}
+                        <span class="status-badge ocupada">🔴 Ocupada</span>
+                    {% elif unidade.status == 'manutencao' %}
+                        <span class="status-badge manutencao">🟡 Manutenção</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if unidade.inquilinos %}
+                        {{ unidade.inquilinos[0].nome if unidade.inquilinos else 'N/A' }}
+                    {% else %}
+                        <span class="sem-inquilino">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a class="btn btn-editar" href="{{ url_for('editar_unidade', unidade_id=unidade.id) }}">✏️ Editar</a>
+                    <a class="btn btn-excluir" href="{{ url_for('excluir_unidade', unidade_id=unidade.id) }}" onclick="return confirm('Tem certeza que deseja excluir esta unidade?');">🗑️ Excluir</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center;">Nenhuma unidade cadastrada.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a class="btn btn-cadastrar" href="{{ url_for('cadastrar_unidade', local_id=local.id) }}">+ Cadastrar nova unidade</a>
+
+    <a class="voltar-link" href="{{ url_for('listar_locais') }}">&larr; Voltar para lista de locais</a>
+</body>
+</html>

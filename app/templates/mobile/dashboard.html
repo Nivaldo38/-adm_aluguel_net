@@ -1,0 +1,185 @@
+{% extends "mobile/app.html" %}
+
+{% block title %}Dashboard - AluguelNet Mobile{% endblock %}
+
+{% block content %}
+<!-- Stats Overview -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📊 Visão Geral</h2>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ contratos|length }}</div>
+            <div class="stat-label">Contratos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ inquilinos|length }}</div>
+            <div class="stat-label">Inquilinos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ locais|length }}</div>
+            <div class="stat-label">Locais</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">R$ {{ "%.0f"|format(receita_mensal) }}</div>
+            <div class="stat-label">Receita</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">⚡ Ações Rápidas</h2>
+    </div>
+    
+    <div class="action-grid">
+        <a href="{{ url_for('cadastrar_contrato') }}" class="action-btn">
+            <i class="fas fa-file-contract"></i>
+            <span>Novo Contrato</span>
+        </a>
+        <a href="{{ url_for('cadastrar_inquilino') }}" class="action-btn">
+            <i class="fas fa-user-plus"></i>
+            <span>Novo Inquilino</span>
+        </a>
+        <a href="{{ url_for('cadastrar_local') }}" class="action-btn">
+            <i class="fas fa-building"></i>
+            <span>Novo Local</span>
+        </a>
+        <a href="{{ url_for('gerar_boletos_lote') }}" class="action-btn">
+            <i class="fas fa-file-invoice"></i>
+            <span>Gerar Boletos</span>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Contracts -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">📋 Contratos Recentes</h2>
+        <a href="{{ url_for('mobile_contratos') }}" style="color: #667eea; font-size: 14px;">
+            Ver todos
+        </a>
+    </div>
+    
+    {% if contratos_recentes %}
+        {% for contrato in contratos_recentes[:3] %}
+        <div class="list-item">
+            <div class="list-item-icon" style="background: #dbeafe; color: #1e40af;">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <div class="list-item-content">
+                <div class="list-item-title">{{ contrato.inquilino.nome }}</div>
+                <div class="list-item-subtitle">
+                    {{ contrato.unidade.local.nome }} - {{ contrato.unidade.nome }}
+                </div>
+                <div style="margin-top: 4px;">
+                    <span style="font-weight: 600; color: #1e293b;">
+                        R$ {{ "%.2f"|format(contrato.valor_aluguel) }}
+                    </span>
+                    {% if contrato.status == 'ativo' %}
+                        <span class="badge badge-success" style="margin-left: 8px;">Ativo</span>
+                    {% elif contrato.status == 'pendente' %}
+                        <span class="badge badge-warning" style="margin-left: 8px;">Pendente</span>
+                    {% elif contrato.status == 'vencido' %}
+                        <span class="badge badge-danger" style="margin-left: 8px;">Vencido</span>
+                    {% else %}
+                        <span class="badge badge-info" style="margin-left: 8px;">{{ contrato.status|title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="list-item-action">
+                <a href="{{ url_for('visualizar_contrato', contrato_id=contrato.id) }}">
+                    <i class="fas fa-eye"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+            <i class="fas fa-file-contract" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+            <p>Nenhum contrato encontrado</p>
+            <a href="{{ url_for('cadastrar_contrato') }}" class="action-btn" style="margin-top: 16px; display: inline-block;">
+                <i class="fas fa-plus"></i>
+                <span>Criar Primeiro Contrato</span>
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- System Status -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔧 Status do Sistema</h2>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center;">
+            <i class="fas fa-database" style="font-size: 24px; color: #667eea; margin-bottom: 8px;"></i>
+            <div style="font-weight: 600; color: #1e293b;">Backup</div>
+            <div style="font-size: 12px; color: #64748b;">Há 2 horas</div>
+            <span class="badge badge-success" style="margin-top: 4px;">OK</span>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center;">
+            <i class="fas fa-envelope" style="font-size: 24px; color: #667eea; margin-bottom: 8px;"></i>
+            <div style="font-weight: 600; color: #1e293b;">Emails</div>
+            <div style="font-size: 12px; color: #64748b;">3 hoje</div>
+            <span class="badge badge-info" style="margin-top: 4px;">Enviado</span>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center;">
+            <i class="fas fa-signature" style="font-size: 24px; color: #667eea; margin-bottom: 8px;"></i>
+            <div style="font-weight: 600; color: #1e293b;">DS4</div>
+            <div style="font-size: 12px; color: #64748b;">2 pendentes</div>
+            <span class="badge badge-warning" style="margin-top: 4px;">Pendente</span>
+        </div>
+        
+        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center;">
+            <i class="fas fa-wifi" style="font-size: 24px; color: #667eea; margin-bottom: 8px;"></i>
+            <div style="font-weight: 600; color: #1e293b;">Conexão</div>
+            <div style="font-size: 12px; color: #64748b;">Online</div>
+            <span class="badge badge-success" style="margin-top: 4px;">Ativo</span>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">🔔 Notificações</h2>
+    </div>
+    
+    <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <i class="fas fa-exclamation-triangle" style="color: #92400e; margin-right: 8px;"></i>
+            <span style="font-weight: 600; color: #92400e;">Contrato Vencendo</span>
+        </div>
+        <p style="font-size: 14px; color: #92400e; margin: 0;">
+            Contrato de João Silva vence em 3 dias
+        </p>
+    </div>
+    
+    <div style="background: #dcfce7; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <i class="fas fa-check-circle" style="color: #166534; margin-right: 8px;"></i>
+            <span style="font-weight: 600; color: #166534;">Boleto Pago</span>
+        </div>
+        <p style="font-size: 14px; color: #166534; margin: 0;">
+            Boleto de Maria Santos foi pago
+        </p>
+    </div>
+    
+    <div style="background: #dbeafe; border-radius: 12px; padding: 16px;">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+            <i class="fas fa-signature" style="color: #1e40af; margin-right: 8px;"></i>
+            <span style="font-weight: 600; color: #1e40af;">Assinatura Pendente</span>
+        </div>
+        <p style="font-size: 14px; color: #1e40af; margin: 0;">
+            Contrato aguardando assinatura digital
+        </p>
+    </div>
+</div>
+{% endblock %} 

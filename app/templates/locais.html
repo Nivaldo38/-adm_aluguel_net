@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Locais Cadastrados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            padding: 40px;
+            max-width: 900px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.06);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #0b6ef6;
+            color: #fff;
+            font-size: 17px;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .btn {
+            padding: 6px 18px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 15px;
+            margin-right: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .ver { background: #1cb5e0; }
+        .cadastrar { background: #28a745; }
+        .editar { background: #ffc107; color: #222;}
+        .footer-link {
+            display: block;
+            margin: 25px auto 0 auto;
+            width: fit-content;
+            text-align: center;
+            color: #0b6ef6;
+            font-weight: 500;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Locais Cadastrados</h1>
+    <table>
+        <tr>
+            <th>Nome do Local</th>
+            <th>Ações</th>
+        </tr>
+        {% for local in locais %}
+        <tr>
+            <td>{{ local.nome }}</td>
+            <td>
+                <a class="btn ver" href="{{ url_for('listar_unidades', local_id=local.id) }}">Ver Unidades</a>
+                <a class="btn cadastrar" href="{{ url_for('cadastrar_unidade') }}?local_id={{ local.id }}">Cadastrar Unidade</a>
+                <a class="btn editar" href="{{ url_for('editar_local', local_id=local.id) }}">Editar Local</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a class="footer-link" href="{{ url_for('index') }}">← Voltar à Página inicial</a>
+</body>
+</html>

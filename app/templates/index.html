@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestão de Aluguéis</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f8fb; }
+        .container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px #0002; padding: 38px; }
+        h1 { color: #1976d2; text-align: center; margin-bottom: 32px; }
+        h3 { color: #333; margin-bottom: 16px; }
+        h4 { color: #555; margin-bottom: 12px; }
+        
+        /* Dashboard */
+        .dashboard { margin-bottom: 40px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 0;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .status-section {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        .status-item {
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background: white;
+        }
+        .status-free { color: #28a745; font-weight: bold; }
+        .status-occupied { color: #dc3545; font-weight: bold; }
+        .status-maintenance { color: #ffc107; font-weight: bold; }
+        .status-active { color: #28a745; font-weight: bold; }
+        .status-expired { color: #dc3545; font-weight: bold; }
+        
+        .actions { text-align: center; margin-top: 32px; }
+        .btn {
+            display: block;
+            margin: 12px auto;
+            padding: 12px 0;
+            width: 90%;
+            background: #1976d2;
+            color: #fff;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px #1976d235;
+            cursor: pointer;
+            transition: background .22s;
+            text-decoration: none;
+        }
+        .btn:hover { background: #125ea2; }
+        .footer { margin-top: 22px; text-align: center; color: #a0a0a0; font-size: .95em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Sistema de Gestão de Aluguéis</h1>
+        
+        <!-- Dashboard com estatísticas -->
+        <div class="dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>🏢 Locais</h3>
+                    <p class="stat-number">{{ stats.total_locais }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>🏠 Unidades</h3>
+                    <p class="stat-number">{{ stats.total_unidades }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>👥 Inquilinos</h3>
+                    <p class="stat-number">{{ stats.total_inquilinos }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>📄 Contratos</h3>
+                    <p class="stat-number">{{ stats.total_contratos }}</p>
+                </div>
+            </div>
+            
+            <div class="status-grid">
+                <div class="status-section">
+                    <h4>📊 Status das Unidades</h4>
+                    <div class="status-item">
+                        <span class="status-free">🟢 Livres: {{ stats.unidades_livres }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-occupied">🔴 Ocupadas: {{ stats.unidades_ocupadas }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-maintenance">🟡 Manutenção: {{ stats.unidades_manutencao }}</span>
+                    </div>
+                </div>
+                
+                <div class="status-section">
+                    <h4>📋 Status dos Contratos</h4>
+                    <div class="status-item">
+                        <span class="status-active">✅ Ativos: {{ stats.contratos_ativos }}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-expired">❌ Vencidos: {{ stats.contratos_vencidos }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <h3>🚀 Ações Rápidas</h3>
+            <a class="btn" href="{{ url_for('cadastrar_local') }}">🏢 Cadastrar Novo Local</a>
+            <a class="btn" href="{{ url_for('listar_locais') }}">📋 Listar Locais</a>
+            <a class="btn" href="{{ url_for('cadastrar_unidade') }}">🏠 Cadastrar Unidade</a>
+            <a class="btn" href="{{ url_for('cadastrar_inquilino') }}">👥 Cadastrar Novo Inquilino</a>
+            <a class="btn" href="{{ url_for('listar_inquilinos') }}">📋 Listar Inquilinos</a>
+            <a class="btn" href="{{ url_for('cadastrar_contrato') }}">📄 Cadastrar Novo Contrato</a>
+            <a class="btn" href="{{ url_for('listar_contratos') }}">📋 Listar Contratos</a>
+            <a class="btn" href="{{ url_for('listar_boletos') }}">💰 Gestão de Boletos</a>
+            <a class="btn" href="{{ url_for('backup_page') }}">💾 Backup do Sistema</a>
+            <a class="btn" href="{{ url_for('mobile_index') }}">📱 Versão Mobile</a>
+        </div>
+        <div class="footer">
+            Desenvolvido por NiniKit Innovations
+        </div>
+    </div>
+</body>
+</html>
