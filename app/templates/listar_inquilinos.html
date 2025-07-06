@@ -55,7 +55,7 @@
         .actions-cell {
             text-align: center;
             white-space: nowrap;
-            min-width: 168px;
+            min-width: 200px;
         }
     </style>
 </head>
@@ -87,6 +87,11 @@
                 <td>{{ inq.email }}</td>
                 <td class="actions-cell">
                     <a href="{{ url_for('editar_inquilino', inquilino_id=inq.id) }}" class="btn btn-edit">Editar</a>
+                    {% if not inq.username %}
+                        <a href="{{ url_for('criar_login_inquilino_route', inquilino_id=inq.id) }}" class="btn" style="background: #28a745; color: #fff;">Criar Login</a>
+                    {% else %}
+                        <span class="btn" style="background: #6c757d; color: #fff; cursor: default;">Login Criado</span>
+                    {% endif %}
                     <a href="{{ url_for('excluir_inquilino', inquilino_id=inq.id) }}" class="btn btn-delete" onclick="return confirm('Tem certeza que deseja excluir este inquilino?')">Excluir</a>
                 </td>
             </tr>

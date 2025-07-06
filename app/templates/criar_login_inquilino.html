@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Login - {{ inquilino.nome }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus"></i> Criar Login para Inquilino
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> Informações do Inquilino</h5>
+                        <p><strong>Nome:</strong> {{ inquilino.nome }}</p>
+                        <p><strong>Email:</strong> {{ inquilino.email }}</p>
+                        <p><strong>CPF:</strong> {{ inquilino.cpf }}</p>
+                        <p><strong>Telefone:</strong> {{ inquilino.telefone }}</p>
+                    </div>
+
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="username"><i class="fas fa-user"></i> Nome de Usuário</label>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   placeholder="Digite o nome de usuário" required>
+                            <small class="form-text text-muted">
+                                Escolha um nome de usuário único para o inquilino
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="senha"><i class="fas fa-lock"></i> Senha</label>
+                            <input type="password" class="form-control" id="senha" name="senha" 
+                                   placeholder="Digite a senha" required>
+                            <small class="form-text text-muted">
+                                A senha deve ter pelo menos 6 caracteres
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmar_senha"><i class="fas fa-lock"></i> Confirmar Senha</label>
+                            <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" 
+                                   placeholder="Confirme a senha" required>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-envelope"></i> Envio de Credenciais</h6>
+                            <p class="mb-0">
+                                Após criar o login, as credenciais serão enviadas automaticamente 
+                                para o e-mail do inquilino: <strong>{{ inquilino.email }}</strong>
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Criar Login e Enviar Credenciais
+                            </button>
+                            <a href="{{ url_for('listar_inquilinos') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validação em tempo real
+document.getElementById('confirmar_senha').addEventListener('input', function() {
+    const senha = document.getElementById('senha').value;
+    const confirmarSenha = this.value;
+    
+    if (senha !== confirmarSenha) {
+        this.setCustomValidity('As senhas não coincidem');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+document.getElementById('senha').addEventListener('input', function() {
+    const confirmarSenha = document.getElementById('confirmar_senha');
+    if (confirmarSenha.value) {
+        if (this.value !== confirmarSenha.value) {
+            confirmarSenha.setCustomValidity('As senhas não coincidem');
+        } else {
+            confirmarSenha.setCustomValidity('');
+        }
+    }
+});
+</script>
+{% endblock %} 

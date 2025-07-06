@@ -1,4 +1,6 @@
 from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class Local(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -24,7 +26,34 @@ class Inquilino(db.Model):
     telefone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), nullable=True)
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidade.id'), nullable=False)
+    # Campos para sistema de login
+    username = db.Column(db.String(50), unique=True, nullable=True)
+    password_hash = db.Column(db.String(255), nullable=True)
+    data_criacao_login = db.Column(db.DateTime, nullable=True)
+    status_login = db.Column(db.String(20), nullable=False, default='inativo')  # inativo, ativo, bloqueado
     contratos = db.relationship('Contrato', backref='inquilino', lazy=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+        
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def gerar_credenciais(self):
+        """Gera username e senha automaticamente baseado no CPF"""
+        if not self.username:
+            # Username baseado no CPF (apenas números)
+            cpf_limpo = ''.join(filter(str.isdigit, self.cpf))
+            self.username = f"inq_{cpf_limpo[-6:]}"  # Últimos 6 dígitos do CPF
+            
+        if not self.password_hash:
+            # Senha baseada no CPF
+            cpf_limpo = ''.join(filter(str.isdigit, self.cpf))
+            senha_padrao = f"Aluguel{cpf_limpo[-4:]}"  # Últimos 4 dígitos do CPF
+            self.set_password(senha_padrao)
+            
+        self.data_criacao_login = datetime.now()
+        self.status_login = 'ativo'
 
 class Contrato(db.Model):
     id = db.Column(db.Integer, primary_key=True)

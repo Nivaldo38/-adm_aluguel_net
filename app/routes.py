@@ -1,13 +1,16 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify, send_file
+from flask import render_template, request, redirect, url_for, flash, jsonify, send_file, session
 from app import app, db
 from app.models import Local, Unidade, Inquilino, Contrato, Boleto
 from datetime import datetime
 import re
 import os
+import secrets
+import string
 from app.contract_generator import ContractGenerator
 from app.ds4_simulado import get_ds4_instance
 from app.email_service import email_service
 from app.backup_service import backup_service
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Função para validar CPF (apenas números e tamanho correto)
 def validar_cpf(cpf):
@@ -31,34 +34,26 @@ def validar_telefone(telefone):
 # Página inicial
 @app.route('/')
 def index():
-    # Estatísticas para o dashboard
-    total_locais = Local.query.count()
-    total_unidades = Unidade.query.count()
-    total_inquilinos = Inquilino.query.count()
-    total_contratos = Contrato.query.count()
+    # Buscar dados
+    contratos = Contrato.query.all()
+    inquilinos = Inquilino.query.all()
+    locais = Local.query.all()
+    unidades = Unidade.query.all()
     
-    # Unidades por status
-    unidades_livres = Unidade.query.filter_by(status='livre').count()
-    unidades_ocupadas = Unidade.query.filter_by(status='ocupada').count()
-    unidades_manutencao = Unidade.query.filter_by(status='manutencao').count()
-    
-    # Contratos por situação
-    contratos_ativos = Contrato.query.filter_by(situacao='Ativo').count()
-    contratos_vencidos = Contrato.query.filter_by(situacao='Vencido').count()
-    
+    # Calcular estatísticas
     stats = {
-        'total_locais': total_locais,
-        'total_unidades': total_unidades,
-        'total_inquilinos': total_inquilinos,
-        'total_contratos': total_contratos,
-        'unidades_livres': unidades_livres,
-        'unidades_ocupadas': unidades_ocupadas,
-        'unidades_manutencao': unidades_manutencao,
-        'contratos_ativos': contratos_ativos,
-        'contratos_vencidos': contratos_vencidos
+        'total_locais': len(locais),
+        'total_inquilinos': len(inquilinos),
+        'contratos_ativos': Contrato.query.filter_by(situacao='Ativo').count(),
+        'receita_mensal': sum(c.valor_aluguel for c in contratos if c.situacao == 'Ativo')
     }
     
-    return render_template('index.html', stats=stats)
+    # Contratos recentes
+    contratos_recentes = Contrato.query.order_by(Contrato.id.desc()).limit(5).all()
+    
+    return render_template('index.html', 
+                         stats=stats,
+                         contratos_recentes=contratos_recentes)
 
 # Listar locais
 @app.route('/locais')
@@ -539,16 +534,7 @@ def listar_contratos():
     contratos_rescindidos = len([c for c in contratos if c.situacao == 'rescindido'])
     
     return render_template('listar_contratos.html', 
-                         contratos=contratos, 
-                         locais=locais, 
-                         local_id=local_id,
-                         situacao=situacao,
-                         stats={
-                             'total': total_contratos,
-                             'ativos': contratos_ativos,
-                             'vencidos': contratos_vencidos,
-                             'rescindidos': contratos_rescindidos
-                         })
+                         contratos=contratos)
 
 # Editar contrato
 @app.route('/editar_contrato/<int:contrato_id>', methods=['GET', 'POST'])
@@ -861,7 +847,7 @@ def enviar_para_assinatura(contrato_id):
 
 @app.route('/verificar_status_assinatura/<int:contrato_id>')
 def verificar_status_assinatura(contrato_id):
-    """Verifica status da assinatura digital"""
+    """Verifica status da assinatura digital e envia credenciais automaticamente"""
     contrato = Contrato.query.get_or_404(contrato_id)
     
     if not contrato.envelope_id:
@@ -873,7 +859,24 @@ def verificar_status_assinatura(contrato_id):
         status_result = ds4.check_signature_status(contrato)
         
         if status_result['status'] == 'completed':
-            flash('Contrato foi assinado digitalmente!', 'success')
+            # Contrato foi assinado - enviar credenciais automaticamente
+            inquilino = contrato.inquilino
+            
+            # Verificar se o inquilino já tem login
+            if not inquilino.username:
+                # Gerar credenciais automáticas seguras
+                username, senha = gerar_credenciais_automaticas(inquilino)
+                
+                # Criar login e enviar credenciais
+                success, message = criar_login_inquilino(inquilino.id, username, senha)
+                
+                if success:
+                    flash('Contrato assinado! Credenciais de acesso enviadas automaticamente para o inquilino.', 'success')
+                else:
+                    flash('Contrato assinado! Erro ao enviar credenciais.', 'warning')
+            else:
+                flash('Contrato foi assinado digitalmente!', 'success')
+                
         elif status_result['status'] == 'sent':
             flash('Contrato aguardando assinatura do inquilino.', 'info')
         elif status_result['status'] == 'delivered':
@@ -1030,7 +1033,7 @@ def mobile_index():
     contratos_recentes = Contrato.query.order_by(Contrato.data_criacao.desc()).limit(5).all()
     
     # Calcular receita mensal
-    receita_mensal = sum(contrato.valor_aluguel for contrato in contratos if contrato.status == 'ativo')
+    receita_mensal = sum(contrato.valor_aluguel for contrato in contratos if contrato.situacao == 'ativo')
     
     return render_template('mobile/dashboard.html',
                          contratos=contratos,
@@ -1066,3 +1069,256 @@ def mobile_menu():
 def mobile_quick_action():
     """Ação rápida mobile"""
     return render_template('mobile/quick_action.html')
+
+# ========================================
+# SISTEMA DE LOGIN DOS INQUILINOS
+# ========================================
+
+# Login do inquilino
+@app.route('/inquilino/login', methods=['GET', 'POST'])
+def inquilino_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('Usuário e senha são obrigatórios.', 'danger')
+            return render_template('inquilino/login.html')
+        
+        # Buscar inquilino pelo username
+        inquilino = Inquilino.query.filter_by(username=username).first()
+        
+        if inquilino and check_password_hash(inquilino.password_hash, password):
+            if inquilino.status_login == 'ativo':
+                session['inquilino_id'] = inquilino.id
+                session['inquilino_nome'] = inquilino.nome
+                flash(f'Bem-vindo(a), {inquilino.nome}!', 'success')
+                return redirect(url_for('inquilino_dashboard'))
+            else:
+                flash('Sua conta está inativa. Entre em contato com o administrador.', 'warning')
+        else:
+            flash('Usuário ou senha incorretos.', 'danger')
+    
+    return render_template('inquilino/login.html')
+
+# Logout do inquilino
+@app.route('/inquilino/logout')
+def inquilino_logout():
+    session.pop('inquilino_id', None)
+    session.pop('inquilino_nome', None)
+    flash('Logout realizado com sucesso!', 'success')
+    return redirect(url_for('inquilino_login'))
+
+# Dashboard do inquilino
+@app.route('/inquilino/dashboard')
+def inquilino_dashboard():
+    if 'inquilino_id' not in session:
+        return redirect(url_for('inquilino_login'))
+    
+    inquilino_id = session['inquilino_id']
+    inquilino = Inquilino.query.get(inquilino_id)
+    
+    if not inquilino:
+        session.clear()
+        return redirect(url_for('inquilino_login'))
+    
+    # Buscar contrato ativo do inquilino
+    contrato = Contrato.query.filter_by(inquilino_id=inquilino_id, situacao='Ativo').first()
+    
+    # Buscar boletos do inquilino
+    boletos = []
+    if contrato:
+        boletos = Boleto.query.filter_by(contrato_id=contrato.id).order_by(Boleto.data_vencimento.desc()).limit(5).all()
+    
+    # Calcular débitos
+    debitos = 0
+    if contrato and boletos:
+        for boleto in boletos:
+            if boleto.status == 'Pendente' and boleto.data_vencimento < datetime.now().date():
+                debitos += boleto.valor
+    
+    return render_template('inquilino/dashboard.html', 
+                         inquilino=inquilino, 
+                         contrato=contrato, 
+                         boletos=boletos,
+                         debitos=debitos)
+
+# Visualizar contrato do inquilino
+@app.route('/inquilino/contrato')
+def inquilino_contrato():
+    if 'inquilino_id' not in session:
+        return redirect(url_for('inquilino_login'))
+    
+    inquilino_id = session['inquilino_id']
+    contrato = Contrato.query.filter_by(inquilino_id=inquilino_id, situacao='Ativo').first()
+    
+    if not contrato:
+        flash('Nenhum contrato ativo encontrado.', 'warning')
+        return redirect(url_for('inquilino_dashboard'))
+    
+    return render_template('inquilino/contrato.html', contrato=contrato)
+
+# Visualizar boletos do inquilino
+@app.route('/inquilino/boletos')
+def inquilino_boletos():
+    if 'inquilino_id' not in session:
+        return redirect(url_for('inquilino_login'))
+    
+    inquilino_id = session['inquilino_id']
+    contrato = Contrato.query.filter_by(inquilino_id=inquilino_id, situacao='Ativo').first()
+    
+    if not contrato:
+        flash('Nenhum contrato ativo encontrado.', 'warning')
+        return redirect(url_for('inquilino_dashboard'))
+    
+    boletos = Boleto.query.filter_by(contrato_id=contrato.id).order_by(Boleto.data_vencimento.desc()).all()
+    
+    return render_template('inquilino/boletos.html', boletos=boletos, contrato=contrato)
+
+# Perfil do inquilino
+@app.route('/inquilino/perfil')
+def inquilino_perfil():
+    if 'inquilino_id' not in session:
+        return redirect(url_for('inquilino_login'))
+    
+    inquilino_id = session['inquilino_id']
+    inquilino = Inquilino.query.get(inquilino_id)
+    
+    if not inquilino:
+        session.clear()
+        return redirect(url_for('inquilino_login'))
+    
+    return render_template('inquilino/perfil.html', inquilino=inquilino)
+
+# Alterar senha do inquilino
+@app.route('/inquilino/alterar_senha', methods=['GET', 'POST'])
+def inquilino_alterar_senha():
+    if 'inquilino_id' not in session:
+        return redirect(url_for('inquilino_login'))
+    
+    inquilino_id = session['inquilino_id']
+    inquilino = Inquilino.query.get(inquilino_id)
+    
+    if not inquilino:
+        session.clear()
+        return redirect(url_for('inquilino_login'))
+    
+    if request.method == 'POST':
+        senha_atual = request.form.get('senha_atual')
+        nova_senha = request.form.get('nova_senha')
+        confirmar_senha = request.form.get('confirmar_senha')
+        
+        if not senha_atual or not nova_senha or not confirmar_senha:
+            flash('Todos os campos são obrigatórios.', 'danger')
+            return render_template('inquilino/alterar_senha.html')
+        
+        if not check_password_hash(inquilino.password_hash, senha_atual):
+            flash('Senha atual incorreta.', 'danger')
+            return render_template('inquilino/alterar_senha.html')
+        
+        if nova_senha != confirmar_senha:
+            flash('As senhas não coincidem.', 'danger')
+            return render_template('inquilino/alterar_senha.html')
+        
+        if len(nova_senha) < 6:
+            flash('A nova senha deve ter pelo menos 6 caracteres.', 'danger')
+            return render_template('inquilino/alterar_senha.html')
+        
+        inquilino.password_hash = generate_password_hash(nova_senha)
+        db.session.commit()
+        
+        flash('Senha alterada com sucesso!', 'success')
+        return redirect(url_for('inquilino_perfil'))
+    
+    return render_template('inquilino/alterar_senha.html')
+
+# ========================================
+# FUNÇÕES AUXILIARES PARA O SISTEMA
+# ========================================
+
+def gerar_credenciais_automaticas(inquilino):
+    """Gera credenciais automáticas seguras para o inquilino"""
+    # Gerar username baseado no nome
+    nome_limpo = re.sub(r'[^a-zA-Z0-9]', '', inquilino.nome.lower())
+    username = f"{nome_limpo}_{inquilino.id}"
+    
+    # Gerar senha segura
+    caracteres = string.ascii_letters + string.digits + "!@#$%"
+    senha = ''.join(secrets.choice(caracteres) for _ in range(8))
+    
+    return username, senha
+
+# Criar login para inquilino
+@app.route('/criar_login_inquilino/<int:inquilino_id>', methods=['GET', 'POST'])
+def criar_login_inquilino_route(inquilino_id):
+    """Rota para criar login de inquilino via interface web"""
+    inquilino = Inquilino.query.get_or_404(inquilino_id)
+    
+    if request.method == 'POST':
+        username, senha = gerar_credenciais_automaticas(inquilino)
+        
+        # Verificar se username já existe
+        if Inquilino.query.filter_by(username=username).first():
+            flash('Nome de usuário já existe. Escolha outro.', 'danger')
+            return render_template('criar_login_inquilino.html', inquilino=inquilino)
+        
+        # Criar login
+        success, message = criar_login_inquilino(inquilino_id, username, senha)
+        
+        if success:
+            flash(message, 'success')
+            return redirect(url_for('listar_inquilinos'))
+        else:
+            flash(message, 'danger')
+            return render_template('criar_login_inquilino.html', inquilino=inquilino)
+    
+    return render_template('criar_login_inquilino.html', inquilino=inquilino)
+
+def criar_login_inquilino(inquilino_id, username, senha):
+    """Cria login para um inquilino e envia credenciais por e-mail"""
+    inquilino = Inquilino.query.get(inquilino_id)
+    if not inquilino:
+        return False, "Inquilino não encontrado"
+    
+    # Verificar se username já existe
+    if Inquilino.query.filter_by(username=username).first():
+        return False, "Nome de usuário já existe"
+    
+    inquilino.username = username
+    inquilino.password_hash = generate_password_hash(senha)
+    inquilino.status_login = 'ativo'
+    inquilino.data_criacao_login = datetime.now()
+    
+    db.session.commit()
+    
+    # Enviar credenciais por e-mail
+    try:
+        from app.email_service import email_service
+        email_service.send_tenant_credentials(inquilino, username, senha)
+        return True, "Login criado com sucesso e credenciais enviadas por e-mail"
+    except Exception as e:
+        print(f"Erro ao enviar e-mail: {e}")
+        return True, "Login criado com sucesso (erro ao enviar e-mail)"
+
+def ativar_login_inquilino(inquilino_id):
+    """Ativa o login de um inquilino"""
+    inquilino = Inquilino.query.get(inquilino_id)
+    if not inquilino:
+        return False, "Inquilino não encontrado"
+    
+    if not inquilino.username:
+        return False, "Inquilino não possui login criado"
+    
+    inquilino.status_login = 'ativo'
+    db.session.commit()
+    return True, "Login ativado com sucesso"
+
+def desativar_login_inquilino(inquilino_id):
+    """Desativa o login de um inquilino"""
+    inquilino = Inquilino.query.get(inquilino_id)
+    if not inquilino:
+        return False, "Inquilino não encontrado"
+    
+    inquilino.status_login = 'inativo'
+    db.session.commit()
+    return True, "Login desativado com sucesso"

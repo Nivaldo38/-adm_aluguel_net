@@ -52,8 +52,15 @@ class ContractGenerator:
                 alignment=1
             ))
     
-    def generate_contract_pdf(self, contrato, output_path):
+    def generate_contract_pdf(self, contrato, output_path=None):
         """Gera o contrato em PDF"""
+        if output_path is None:
+            # Gerar caminho automático
+            contracts_dir = os.path.join(os.path.dirname(__file__), 'contracts')
+            os.makedirs(contracts_dir, exist_ok=True)
+            filename = self.generate_contract_filename(contrato)
+            output_path = os.path.join(contracts_dir, filename)
+        
         doc = SimpleDocTemplate(output_path, pagesize=A4)
         story = []
         

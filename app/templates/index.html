@@ -1,153 +1,326 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestão de Aluguéis</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f8fb; }
-        .container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px #0002; padding: 38px; }
-        h1 { color: #1976d2; text-align: center; margin-bottom: 32px; }
-        h3 { color: #333; margin-bottom: 16px; }
-        h4 { color: #555; margin-bottom: 12px; }
-        
-        /* Dashboard */
-        .dashboard { margin-bottom: 40px; }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: #f8f9fa;
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #e9ecef;
-        }
-        .stat-card h3 {
-            margin: 0 0 8px 0;
-            font-size: 0.9em;
-            color: #666;
-        }
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #1976d2;
-            margin: 0;
-        }
-        
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-        .status-section {
-            background: #f8f9fa;
-            padding: 16px;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
-        }
-        .status-item {
-            margin: 8px 0;
-            padding: 8px;
-            border-radius: 4px;
-            background: white;
-        }
-        .status-free { color: #28a745; font-weight: bold; }
-        .status-occupied { color: #dc3545; font-weight: bold; }
-        .status-maintenance { color: #ffc107; font-weight: bold; }
-        .status-active { color: #28a745; font-weight: bold; }
-        .status-expired { color: #dc3545; font-weight: bold; }
-        
-        .actions { text-align: center; margin-top: 32px; }
-        .btn {
-            display: block;
-            margin: 12px auto;
-            padding: 12px 0;
-            width: 90%;
-            background: #1976d2;
-            color: #fff;
-            font-size: 1em;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px #1976d235;
-            cursor: pointer;
-            transition: background .22s;
-            text-decoration: none;
-        }
-        .btn:hover { background: #125ea2; }
-        .footer { margin-top: 22px; text-align: center; color: #a0a0a0; font-size: .95em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🏢 Sistema de Gestão de Aluguéis</h1>
-        
-        <!-- Dashboard com estatísticas -->
-        <div class="dashboard">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>🏢 Locais</h3>
-                    <p class="stat-number">{{ stats.total_locais }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>🏠 Unidades</h3>
-                    <p class="stat-number">{{ stats.total_unidades }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>👥 Inquilinos</h3>
-                    <p class="stat-number">{{ stats.total_inquilinos }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>📄 Contratos</h3>
-                    <p class="stat-number">{{ stats.total_contratos }}</p>
-                </div>
+{% extends "base_modern.html" %}
+
+{% block title %}Dashboard - Sistema de Administração de Aluguel{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in">
+    <!-- Welcome Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-4">Sistema de Administração de Aluguel</h1>
+                <a href="{{ url_for('inquilino_login') }}" class="inline-block px-6 py-3 bg-blue-600 text-white font-semibold rounded shadow hover:bg-blue-700 transition mb-6">
+                  Área do Inquilino
+                </a>
+                <p class="text-blue-100 text-lg">Gerencie seus locais, inquilinos e contratos de forma eficiente</p>
             </div>
-            
-            <div class="status-grid">
-                <div class="status-section">
-                    <h4>📊 Status das Unidades</h4>
-                    <div class="status-item">
-                        <span class="status-free">🟢 Livres: {{ stats.unidades_livres }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-occupied">🔴 Ocupadas: {{ stats.unidades_ocupadas }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-maintenance">🟡 Manutenção: {{ stats.unidades_manutencao }}</span>
-                    </div>
-                </div>
-                
-                <div class="status-section">
-                    <h4>📋 Status dos Contratos</h4>
-                    <div class="status-item">
-                        <span class="status-active">✅ Ativos: {{ stats.contratos_ativos }}</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-expired">❌ Vencidos: {{ stats.contratos_vencidos }}</span>
-                    </div>
-                </div>
+            <div class="hidden md:block">
+                <i class="fas fa-building text-6xl text-blue-200"></i>
             </div>
-        </div>
-        
-        <div class="actions">
-            <h3>🚀 Ações Rápidas</h3>
-            <a class="btn" href="{{ url_for('cadastrar_local') }}">🏢 Cadastrar Novo Local</a>
-            <a class="btn" href="{{ url_for('listar_locais') }}">📋 Listar Locais</a>
-            <a class="btn" href="{{ url_for('cadastrar_unidade') }}">🏠 Cadastrar Unidade</a>
-            <a class="btn" href="{{ url_for('cadastrar_inquilino') }}">👥 Cadastrar Novo Inquilino</a>
-            <a class="btn" href="{{ url_for('listar_inquilinos') }}">📋 Listar Inquilinos</a>
-            <a class="btn" href="{{ url_for('cadastrar_contrato') }}">📄 Cadastrar Novo Contrato</a>
-            <a class="btn" href="{{ url_for('listar_contratos') }}">📋 Listar Contratos</a>
-            <a class="btn" href="{{ url_for('listar_boletos') }}">💰 Gestão de Boletos</a>
-            <a class="btn" href="{{ url_for('backup_page') }}">💾 Backup do Sistema</a>
-            <a class="btn" href="{{ url_for('mobile_index') }}">📱 Versão Mobile</a>
-        </div>
-        <div class="footer">
-            Desenvolvido por NiniKit Innovations
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Locais -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg card-hover border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Locais</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_locais }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-map-marker-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center text-sm text-green-600">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    <span>+12% este mês</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Inquilinos -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg card-hover border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total de Inquilinos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_inquilinos }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-users text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center text-sm text-green-600">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    <span>+8% este mês</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contratos Ativos -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg card-hover border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Contratos Ativos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.contratos_ativos }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-file-contract text-purple-600 dark:text-purple-400 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center text-sm text-green-600">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    <span>+15% este mês</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receita Mensal -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg card-hover border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Receita Mensal</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ stats.receita_mensal|default('0,00') }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center text-sm text-green-600">
+                    <i class="fas fa-arrow-up mr-1"></i>
+                    <span>+23% este mês</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Quick Actions Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações Rápidas</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ url_for('cadastrar_local') }}" class="flex flex-col items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Local</span>
+                </a>
+                
+                <a href="{{ url_for('cadastrar_inquilino') }}" class="flex flex-col items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-user-plus text-green-600 dark:text-green-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Inquilino</span>
+                </a>
+                
+                <a href="{{ url_for('cadastrar_contrato') }}" class="flex flex-col items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-file-signature text-purple-600 dark:text-purple-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Contrato</span>
+                </a>
+                
+                <a href="{{ url_for('gerar_boletos_lote') }}" class="flex flex-col items-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg hover:bg-yellow-100 dark:hover:bg-yellow-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-receipt text-yellow-600 dark:text-yellow-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Gerar Boletos</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Área do Inquilino Card -->
+        <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg text-white">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Área do Inquilino</h3>
+                <i class="fas fa-user-circle text-3xl text-indigo-200"></i>
+            </div>
+            <p class="text-indigo-100 mb-6">Acesso direto para inquilinos visualizarem seus contratos, boletos e informações pessoais.</p>
+            <div class="space-y-3">
+                <a href="{{ url_for('inquilino_login') }}" 
+                   class="block w-full bg-white/20 hover:bg-white/30 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 text-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Acessar Área do Inquilino
+                </a>
+                <p class="text-xs text-indigo-200 text-center">
+                    Login e senha necessários
+                </p>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Atividade Recente</h3>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-file-contract text-blue-600 dark:text-blue-400 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Novo contrato criado</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Contrato #123 - João Silva</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">2h atrás</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-plus text-green-600 dark:text-green-400 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Novo inquilino cadastrado</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Maria Santos</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">4h atrás</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-receipt text-yellow-600 dark:text-yellow-400 text-sm"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Boleto gerado</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Boleto #456 - R$ 1.200,00</p>
+                    </div>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">6h atrás</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Revenue Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receita dos Últimos 6 Meses</h3>
+            <div class="h-64 flex items-end justify-between space-x-2">
+                <div class="flex-1 bg-blue-100 dark:bg-blue-900 rounded-t" style="height: 60%"></div>
+                <div class="flex-1 bg-blue-200 dark:bg-blue-800 rounded-t" style="height: 80%"></div>
+                <div class="flex-1 bg-blue-300 dark:bg-blue-700 rounded-t" style="height: 45%"></div>
+                <div class="flex-1 bg-blue-400 dark:bg-blue-600 rounded-t" style="height: 90%"></div>
+                <div class="flex-1 bg-blue-500 dark:bg-blue-500 rounded-t" style="height: 75%"></div>
+                <div class="flex-1 bg-blue-600 dark:bg-blue-400 rounded-t" style="height: 85%"></div>
+            </div>
+            <div class="flex justify-between mt-4 text-xs text-gray-500 dark:text-gray-400">
+                <span>Jan</span>
+                <span>Fev</span>
+                <span>Mar</span>
+                <span>Abr</span>
+                <span>Mai</span>
+                <span>Jun</span>
+            </div>
+        </div>
+
+        <!-- Occupancy Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Taxa de Ocupação</h3>
+            <div class="flex items-center justify-center h-64">
+                <div class="relative">
+                    <div class="w-32 h-32 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <div class="w-24 h-24 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">85%</span>
+                        </div>
+                    </div>
+                    <div class="absolute inset-0 w-32 h-32 border-4 border-green-500 rounded-full" style="clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%)"></div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p class="text-sm text-gray-600 dark:text-gray-400">17 de 20 unidades ocupadas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Contracts -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Contratos Recentes</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inquilino</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Local</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {% for contrato in contratos_recentes %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-blue-600 dark:text-blue-400 text-sm"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ contrato.inquilino.nome }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">{{ contrato.inquilino.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 dark:text-white">{{ contrato.unidade.local.nome }}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ contrato.unidade.nome }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">R$ {{ "%.2f"|format(contrato.valor_aluguel) }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if contrato.status == 'Ativo' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                {% elif contrato.status == 'Pendente' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                                {{ contrato.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="{{ url_for('visualizar_contrato', contrato_id=contrato.id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('editar_contrato', contrato_id=contrato.id) }}" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fixed bottom-6 right-6 z-50">
+    <button class="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center">
+        <i class="fas fa-plus text-xl"></i>
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animate stats on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const statsCards = document.querySelectorAll('.card-hover');
+        statsCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('animate-bounce-in');
+            }, index * 100);
+        });
+    });
+
+    // Add hover effects to quick action buttons
+    const quickActions = document.querySelectorAll('[href]');
+    quickActions.forEach(action => {
+        action.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        action.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+</script>
+{% endblock %} 

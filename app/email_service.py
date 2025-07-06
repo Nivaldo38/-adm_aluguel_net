@@ -188,6 +188,81 @@ class EmailService:
         
         return self.send_email(boleto.contrato.inquilino.email, subject, body, html_body)
     
+    def send_tenant_credentials(self, inquilino, username, password):
+        """Envia credenciais de acesso para o inquilino"""
+        subject = f"Credenciais de Acesso - {inquilino.nome}"
+        
+        body = f"""
+        Olá {inquilino.nome},
+        
+        Suas credenciais de acesso ao sistema foram criadas com sucesso!
+        
+        Dados de Acesso:
+        - Usuário: {username}
+        - Senha: {password}
+        
+        Para acessar sua área no sistema:
+        1. Acesse: http://127.0.0.1:5000/inquilino/login
+        2. Digite seu usuário e senha
+        3. Após o primeiro acesso, recomendamos alterar sua senha
+        
+        Na área do inquilino você poderá:
+        - Visualizar seu contrato
+        - Acessar boletos e débitos
+        - Verificar vencimentos
+        - Atualizar seus dados
+        
+        Atenciosamente,
+        Sistema de Gestão de Aluguel
+        """
+        
+        html_body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; color: white; text-align: center;">
+                <h1>🔐 Credenciais de Acesso</h1>
+            </div>
+            <div style="padding: 20px; background: #f9f9f9;">
+                <p>Olá <strong>{inquilino.nome}</strong>,</p>
+                <p>Suas credenciais de acesso ao sistema foram criadas com sucesso!</p>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+                    <h3>🔑 Dados de Acesso:</h3>
+                    <ul>
+                        <li><strong>Usuário:</strong> {username}</li>
+                        <li><strong>Senha:</strong> {password}</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3>📋 Como acessar:</h3>
+                    <ol>
+                        <li>Acesse: <a href="http://127.0.0.1:5000/inquilino/login">http://127.0.0.1:5000/inquilino/login</a></li>
+                        <li>Digite seu usuário e senha</li>
+                        <li>Após o primeiro acesso, recomendamos alterar sua senha</li>
+                    </ol>
+                </div>
+                
+                <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h3>🎯 Na área do inquilino você poderá:</h3>
+                    <ul>
+                        <li>Visualizar seu contrato</li>
+                        <li>Acessar boletos e débitos</li>
+                        <li>Verificar vencimentos</li>
+                        <li>Atualizar seus dados</li>
+                    </ul>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                    <p style="color: #666;">Atenciosamente,<br>Sistema de Gestão de Aluguel</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(inquilino.email, subject, body, html_body)
+    
     def send_monthly_report(self, contrato):
         """Envia relatório mensal"""
         subject = f"Relatório Mensal - {contrato.inquilino.nome}"
