@@ -212,7 +212,7 @@
                                 <a href="{{ url_for('enviar_para_assinatura', contrato_id=contrato.id) }}" class="action-btn" style="background-color: #28a745;" onclick="return confirm('Enviar contrato para assinatura digital?')">✍️ Enviar para Assinatura</a>
                             {% else %}
                                 <a href="{{ url_for('verificar_status_assinatura', contrato_id=contrato.id) }}" class="action-btn" style="background-color: #17a2b8;">📊 Verificar Status</a>
-                                {% if contrato.status_assinatura == 'assinado' and contrato.arquivo_contrato_assinado %}
+                                {% if contrato.situacao_assinatura == 'assinado' and contrato.arquivo_contrato_assinado %}
                                     <a href="{{ url_for('visualizar_contrato_assinado', contrato_id=contrato.id) }}" class="action-btn" style="background-color: #28a745;">✅ Ver Assinado</a>
                                     <a href="{{ url_for('visualizar_contrato_assinado', contrato_id=contrato.id, download='true') }}" class="action-btn" style="background-color: #17a2b8;" target="_blank">📄 Baixar PDF</a>
                                 {% endif %}

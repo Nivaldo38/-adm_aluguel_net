@@ -155,7 +155,7 @@ def editar_unidade(unidade_id):
                 return render_template('editar_unidade.html', unidade=unidade)
         
         unidade.nome = nome
-        unidade.status = status
+        unidade.situacao = status
         db.session.commit()
         flash('Unidade atualizada com sucesso!', 'success')
         return redirect(url_for('listar_unidades', local_id=unidade.local_id))
@@ -175,7 +175,7 @@ def excluir_unidade(unidade_id):
 @app.route('/api/unidades/<int:local_id>')
 def api_unidades(local_id):
     unidades = Unidade.query.filter_by(local_id=local_id).all()
-    unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.status} for u in unidades]
+    unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.situacao} for u in unidades]
     return jsonify(unidades_json)
 
 # Cadastrar inquilino
@@ -257,7 +257,7 @@ def cadastrar_inquilino():
         # Atualizar status da unidade para 'ocupada'
         unidade = Unidade.query.get(unidade_id)
         if unidade:
-            unidade.status = 'ocupada'
+            unidade.situacao = 'ocupada'
         
         db.session.commit()
         flash('Inquilino cadastrado com sucesso! A unidade foi marcada como ocupada.', 'success')
@@ -354,7 +354,7 @@ def excluir_inquilino(inquilino_id):
     # Atualizar status da unidade para 'livre'
     unidade = Unidade.query.get(unidade_id)
     if unidade:
-        unidade.status = 'livre'
+        unidade.situacao = 'livre'
     
     db.session.commit()
     flash('Inquilino excluído com sucesso! A unidade foi marcada como livre.', 'success')
@@ -592,12 +592,12 @@ def listar_boletos():
     # Atualizar status de boletos vencidos
     hoje = datetime.now().date()
     boletos_vencidos = Boleto.query.filter(
-        Boleto.status == 'pendente',
+        Boleto.situacao == 'pendente',
         Boleto.data_vencimento < hoje
     ).all()
     
     for boleto in boletos_vencidos:
-        boleto.status = 'vencido'
+        boleto.situacao = 'vencido'
     
     if boletos_vencidos:
         db.session.commit()
@@ -605,7 +605,7 @@ def listar_boletos():
     query = Boleto.query
     
     if status_filter:
-        query = query.filter(Boleto.status == status_filter)
+        query = query.filter(Boleto.situacao == status_filter)
     
     if contrato_id:
         query = query.filter(Boleto.contrato_id == contrato_id)
@@ -614,9 +614,9 @@ def listar_boletos():
     
     # Estatísticas
     total_boletos = len(boletos)
-    boletos_pendentes = len([b for b in boletos if b.status == 'pendente'])
-    boletos_pagos = len([b for b in boletos if b.status == 'pago'])
-    boletos_vencidos = len([b for b in boletos if b.status == 'vencido'])
+    boletos_pendentes = len([b for b in boletos if b.situacao == 'pendente'])
+    boletos_pagos = len([b for b in boletos if b.situacao == 'pago'])
+    boletos_vencidos = len([b for b in boletos if b.situacao == 'vencido'])
     
     return render_template('listar_boletos.html', 
                          boletos=boletos, 
@@ -695,7 +695,7 @@ def gerar_boleto(contrato_id):
 @app.route('/marcar_pago/<int:boleto_id>')
 def marcar_pago(boleto_id):
     boleto = Boleto.query.get_or_404(boleto_id)
-    boleto.status = 'pago'
+    boleto.situacao = 'pago'
     boleto.data_pagamento = datetime.now()
     db.session.commit()
     flash('Boleto marcado como pago!', 'success')
@@ -705,7 +705,7 @@ def marcar_pago(boleto_id):
 @app.route('/cancelar_boleto/<int:boleto_id>')
 def cancelar_boleto(boleto_id):
     boleto = Boleto.query.get_or_404(boleto_id)
-    boleto.status = 'cancelado'
+    boleto.situacao = 'cancelado'
     db.session.commit()
     flash('Boleto cancelado!', 'success')
     return redirect(url_for('listar_boletos'))
@@ -926,7 +926,7 @@ def cancelar_assinatura(contrato_id):
     try:
         ds4 = get_ds4_instance()
         # Implementar cancelamento no DS4
-        contrato.status_assinatura = 'cancelado'
+        contrato.situacao_assinatura = 'cancelado'
         db.session.commit()
         flash('Processo de assinatura cancelado.', 'success')
         
@@ -942,7 +942,7 @@ def enviar_notificacao_contrato(contrato_id):
     """Envia notificação de contrato assinado"""
     contrato = Contrato.query.get_or_404(contrato_id)
     
-    if contrato.status_assinatura == 'assinado':
+    if contrato.situacao_assinatura == 'assinado':
         success = email_service.notify_contract_signed(contrato)
         if success:
             flash('Notificação de contrato assinado enviada com sucesso.', 'success')
@@ -1086,7 +1086,7 @@ def inquilino_login():
         inquilino = Inquilino.query.filter_by(username=username).first()
         
         if inquilino and check_password_hash(inquilino.password_hash, password):
-            if inquilino.status_login == 'ativo':
+            if inquilino.situacao_login == 'ativo':
                 session['inquilino_id'] = inquilino.id
                 session['inquilino_nome'] = inquilino.nome
                 flash(f'Bem-vindo(a), {inquilino.nome}!', 'success')
@@ -1131,7 +1131,7 @@ def inquilino_dashboard():
     debitos = 0
     if contrato and boletos:
         for boleto in boletos:
-            if boleto.status == 'Pendente' and boleto.data_vencimento < datetime.now().date():
+            if boleto.situacao == 'Pendente' and boleto.data_vencimento < datetime.now().date():
                 debitos += boleto.valor
     
     return render_template('inquilino/dashboard.html', 
@@ -1283,7 +1283,7 @@ def criar_login_inquilino(inquilino_id, username, senha):
     
     inquilino.username = username
     inquilino.password_hash = generate_password_hash(senha)
-    inquilino.status_login = 'ativo'
+    inquilino.situacao_login = 'ativo'
     inquilino.data_criacao_login = datetime.now()
     
     db.session.commit()
@@ -1306,7 +1306,7 @@ def ativar_login_inquilino(inquilino_id):
     if not inquilino.username:
         return False, "Inquilino não possui login criado"
     
-    inquilino.status_login = 'ativo'
+    inquilino.situacao_login = 'ativo'
     db.session.commit()
     return True, "Login ativado com sucesso"
 
@@ -1316,6 +1316,6 @@ def desativar_login_inquilino(inquilino_id):
     if not inquilino:
         return False, "Inquilino não encontrado"
     
-    inquilino.status_login = 'inativo'
+    inquilino.situacao_login = 'inativo'
     db.session.commit()
     return True, "Login desativado com sucesso"
