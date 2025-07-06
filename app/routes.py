@@ -1030,7 +1030,7 @@ def mobile_index():
     contratos = Contrato.query.all()
     inquilinos = Inquilino.query.all()
     locais = Local.query.all()
-    contratos_recentes = Contrato.query.order_by(Contrato.data_criacao.desc()).limit(5).all()
+    contratos_recentes = Contrato.query.order_by(Contrato.id.desc()).limit(5).all()
     
     # Calcular receita mensal
     receita_mensal = sum(contrato.valor_aluguel for contrato in contratos if contrato.situacao == 'ativo')
