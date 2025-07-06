@@ -384,11 +384,11 @@
                 <i>👤</i>
                 <span>Inquilinos</span>
             </a></li>
-            <li><a href="{{ url_for('locais') }}" class="{% if request.endpoint == 'locais' %}active{% endif %}">
+            <li><a href="{{ url_for('listar_locais') }}" class="{% if request.endpoint == 'listar_locais' %}active{% endif %}">
                 <i>🏢</i>
                 <span>Locais</span>
             </a></li>
-            <li><a href="{{ url_for('boletos') }}" class="{% if request.endpoint == 'boletos' %}active{% endif %}">
+            <li><a href="{{ url_for('listar_boletos') }}" class="{% if request.endpoint == 'listar_boletos' %}active{% endif %}">
                 <i>💰</i>
                 <span>Boletos</span>
             </a></li>
