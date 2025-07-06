@@ -79,14 +79,14 @@
                     <span style="font-weight: 600; color: #1e293b;">
                         R$ {{ "%.2f"|format(contrato.valor_aluguel) }}
                     </span>
-                    {% if contrato.status == 'ativo' %}
+                    {% if contrato.situacao == 'Ativo' %}
                         <span class="badge badge-success" style="margin-left: 8px;">Ativo</span>
-                    {% elif contrato.status == 'pendente' %}
+                    {% elif contrato.situacao == 'Pendente' %}
                         <span class="badge badge-warning" style="margin-left: 8px;">Pendente</span>
-                    {% elif contrato.status == 'vencido' %}
+                    {% elif contrato.situacao == 'Vencido' %}
                         <span class="badge badge-danger" style="margin-left: 8px;">Vencido</span>
                     {% else %}
-                        <span class="badge badge-info" style="margin-left: 8px;">{{ contrato.status|title }}</span>
+                        <span class="badge badge-info" style="margin-left: 8px;">{{ contrato.situacao|title }}</span>
                     {% endif %}
                 </div>
             </div>
