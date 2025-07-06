@@ -175,7 +175,7 @@ def excluir_unidade(unidade_id):
 @app.route('/api/unidades/<int:local_id>')
 def api_unidades(local_id):
     unidades = Unidade.query.filter_by(local_id=local_id).all()
-    unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.situacao} for u in unidades]
+    unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.status} for u in unidades]
     return jsonify(unidades_json)
 
 # Cadastrar inquilino
