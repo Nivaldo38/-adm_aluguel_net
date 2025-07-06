@@ -6,10 +6,10 @@ import re
 import os
 import secrets
 import string
-# # from app.contract_generator import ContractGenerator  # Arquivo removido
+# # # from app.contract_generator import ContractGenerator  # Removido  # Arquivo removido
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
-# from app.backup_service import backup_service
+# # from app.backup_service import backup_service  # Removido
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Função para validar CPF (apenas números e tamanho correto)
@@ -1284,7 +1284,7 @@ def criar_login_inquilino(inquilino_id, username, senha):
     inquilino.username = username
     inquilino.password_hash = generate_password_hash(senha)
     inquilino.situacao_login = 'ativo'
-    inquilino.data_criacao_login = datetime.now()
+    inquilino.id_login = datetime.now()
     
     db.session.commit()
     
