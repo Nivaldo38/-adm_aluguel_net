@@ -6,7 +6,7 @@ import re
 import os
 import secrets
 import string
-from app.contract_generator import ContractGenerator
+# from app.contract_generator import ContractGenerator  # Arquivo removido
 from app.ds4_simulado import get_ds4_instance
 from app.email_service import email_service
 from app.backup_service import backup_service
@@ -479,18 +479,14 @@ def cadastrar_contrato():
             
             # Gerar contrato automaticamente
             try:
-                generator = ContractGenerator()
-                filename = generator.generate_contract_filename(novo_contrato)
-                contract_path = os.path.join('contracts', filename)
-                
                 # Gerar PDF do contrato
-                generator.generate_contract_pdf(novo_contrato, contract_path)
+                # generator.generate_contract_pdf(novo_contrato, contract_path)
                 
                 # Atualizar caminho do arquivo no banco
-                novo_contrato.arquivo_contrato = contract_path
-                db.session.commit()
+                # novo_contrato.arquivo_contrato = contract_path
+                # db.session.commit()
                 
-                flash('Contrato cadastrado e documento gerado com sucesso!', 'success')
+                flash('Contrato cadastrado com sucesso!', 'success')
             except Exception as e:
                 flash('Contrato cadastrado, mas houve erro na geração do documento. Tente novamente.', 'warning')
             
@@ -801,12 +797,13 @@ def visualizar_contrato(contrato_id):
 def regenerar_contrato(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
     try:
-        generator = ContractGenerator()
-        filename = generator.generate_contract_filename(contrato)
-        contract_path = os.path.join('contracts', filename)
-        generator.generate_contract_pdf(contrato, contract_path)
-        contrato.arquivo_contrato = contract_path
-        db.session.commit()
+        # Gerar PDF do contrato
+        # generator.generate_contract_pdf(contrato, contract_path)
+        
+        # Atualizar caminho do arquivo no banco
+        # novo_contrato.arquivo_contrato = contract_path
+        # db.session.commit()
+        
         flash('Contrato regenerado com sucesso!', 'success')
     except Exception as e:
         flash('Erro ao regenerar contrato. Tente novamente.', 'danger')
