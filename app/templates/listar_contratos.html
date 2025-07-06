@@ -81,7 +81,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Ativos</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('status', 'equalto', 'Ativo')|list|length }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('situacao', 'equalto', 'Ativo')|list|length }}</p>
                 </div>
             </div>
         </div>
@@ -93,7 +93,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pendentes</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('status', 'equalto', 'Pendente')|list|length }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('situacao', 'equalto', 'Pendente')|list|length }}</p>
                 </div>
             </div>
         </div>
@@ -105,7 +105,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Vencidos</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('status', 'equalto', 'Vencido')|list|length }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos|selectattr('situacao', 'equalto', 'Vencido')|list|length }}</p>
                 </div>
             </div>
         </div>
@@ -134,7 +134,7 @@
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 contract-row" 
                         data-inquilino="{{ contrato.inquilino.nome.lower() }}" 
                         data-local="{{ contrato.unidade.local.nome.lower() }}"
-                        data-status="{{ contrato.status }}">
+                        data-status="{{ contrato.situacao }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
@@ -160,11 +160,11 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full 
-                                {% if contrato.status == 'Ativo' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
-                                {% elif contrato.status == 'Pendente' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
-                                {% elif contrato.status == 'Vencido' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
+                                {% if contrato.situacao == 'Ativo' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                {% elif contrato.situacao == 'Pendente' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                {% elif contrato.situacao == 'Vencido' %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
                                 {% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
-                                {{ contrato.status }}
+                                {{ contrato.situacao }}
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -179,7 +179,7 @@
                                    title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                {% if contrato.status == 'Pendente' %}
+                                {% if contrato.situacao == 'Pendente' %}
                                 <a href="{{ url_for('enviar_para_assinatura', contrato_id=contrato.id) }}" 
                                    class="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300 p-1 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors duration-200"
                                    title="Enviar para Assinatura">
