@@ -2,7 +2,7 @@ import os
 import base64
 import requests
 from datetime import datetime, timedelta
-from docusign_esign import ApiClient, EnvelopesApi, EnvelopeDefinition, Document, Signer, SignHere, Tabs, ApiException
+from docusign_esign import ApiClient, EnvelopesApi, EnvelopeDefinition, Document, Signer, SignHere, Tabs
 
 class DS4Integration:
     def __init__(self):
