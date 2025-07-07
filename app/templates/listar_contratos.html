@@ -51,11 +51,11 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Período</label>
                 <select id="dateFilter" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
-                    <option value="">Todos</option>
+                <option value="">Todos</option>
                     <option value="30">Últimos 30 dias</option>
                     <option value="90">Últimos 3 meses</option>
                     <option value="365">Último ano</option>
-                </select>
+            </select>
             </div>
         </div>
     </div>
@@ -127,10 +127,10 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Período</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ações</th>
-                    </tr>
+            </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for contrato in contratos %}
+            {% for contrato in contratos %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 contract-row" 
                         data-inquilino="{{ contrato.inquilino.nome.lower() }}" 
                         data-local="{{ contrato.unidade.local.nome.lower() }}"
@@ -201,11 +201,11 @@
                                 </a>
                                 {% endif %}
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
                 </tbody>
-            </table>
+        </table>
         </div>
         
         {% if not contratos %}
