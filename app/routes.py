@@ -9,8 +9,11 @@ import string
 # # # from app.contract_generator import ContractGenerator  # Removido  # Arquivo removido
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
-# # from app.backup_service import backup_service  # Removido
+from app.backup_service import BackupService
 from werkzeug.security import generate_password_hash, check_password_hash
+
+# Instanciar o serviço de backup
+backup_service = BackupService()
 
 # Função para validar CPF (apenas números e tamanho correto)
 def validar_cpf(cpf):
