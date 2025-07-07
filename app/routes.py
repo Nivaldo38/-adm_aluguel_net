@@ -6,6 +6,7 @@ import re
 import os
 import secrets
 import string
+import json
 # # # from app.contract_generator import ContractGenerator  # Removido  # Arquivo removido
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
@@ -1118,7 +1119,20 @@ def enviar_relatorio_mensal(contrato_id):
 def backup_page():
     """Página de gerenciamento de backup"""
     backups = backup_service.list_backups()
-    return render_template('backup.html', backups=backups)
+    
+    # Carregar log de backups
+    backup_log = []
+    log_file = os.path.join(backup_service.backup_dir, 'backup_log.json')
+    if os.path.exists(log_file):
+        try:
+            with open(log_file, 'r', encoding='utf-8') as f:
+                backup_log = json.load(f)
+            # Manter apenas os últimos 10 registros
+            backup_log = backup_log[-10:]
+        except:
+            backup_log = []
+    
+    return render_template('backup.html', backups=backups, backup_log=backup_log)
 
 @app.route('/criar_backup')
 def criar_backup():
