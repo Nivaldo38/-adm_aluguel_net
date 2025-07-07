@@ -55,6 +55,10 @@
                             option.text = unidade.nome;
                             unidadeSelect.appendChild(option);
                         });
+                        // Selecionar unidade se houver dados mantidos
+                        {% if dados and dados.unidade_id %}
+                        document.getElementById('unidade_id').value = '{{ dados.unidade_id }}';
+                        {% endif %}
                     });
             }
         }
@@ -100,7 +104,7 @@
             <select name="local_id" id="local_id" required onchange="filtrarUnidades()">
                 <option value="">Selecione o Local</option>
                 {% for local in locais %}
-                    <option value="{{ local.id }}">{{ local.nome }}</option>
+                    <option value="{{ local.id }}" {% if dados and dados.local_id == local.id %}selected{% endif %}>{{ local.nome }}</option>
                 {% endfor %}
             </select>
 
@@ -110,28 +114,28 @@
             </select>
 
             <label for="nome">Nome:</label>
-            <input type="text" name="nome" required>
+            <input type="text" name="nome" value="{{ dados.nome if dados else '' }}" required>
 
             <label for="cpf">CPF (somente números):</label>
-            <input type="text" name="cpf" maxlength="11" pattern="\d{11}" title="Digite 11 dígitos numéricos" required>
+            <input type="text" name="cpf" maxlength="11" pattern="\d{11}" title="Digite 11 dígitos numéricos" value="{{ dados.cpf if dados else '' }}" required>
 
             <label for="data_nascimento">Data de Nascimento:</label>
-            <input type="date" name="data_nascimento" id="data_nascimento" required onchange="calcularIdade()">
+            <input type="date" name="data_nascimento" id="data_nascimento" value="{{ dados.data_nascimento if dados else '' }}" required onchange="calcularIdade()">
 
             <label for="idade">Idade:</label>
-            <input type="number" name="idade" id="idade" readonly>
+            <input type="number" name="idade" id="idade" value="{{ dados.idade if dados else '' }}" readonly>
 
             <label for="cep">CEP:</label>
-            <input type="text" name="cep" id="cep" maxlength="8" pattern="\d{8}" title="Digite 8 dígitos numéricos" required onblur="buscarEndereco()">
+            <input type="text" name="cep" id="cep" maxlength="8" pattern="\d{8}" title="Digite 8 dígitos numéricos" value="{{ dados.cep if dados else '' }}" required onblur="buscarEndereco()">
 
             <label for="endereco">Endereço:</label>
-            <input type="text" name="endereco" id="endereco" required>
+            <input type="text" name="endereco" id="endereco" value="{{ dados.endereco if dados else '' }}" required>
 
             <label for="telefone">Telefone (somente números):</label>
-            <input type="tel" name="telefone" pattern="\d{10,11}" title="Digite 10 ou 11 dígitos numéricos" required>
+            <input type="tel" name="telefone" pattern="\d{10,11}" title="Digite 10 ou 11 dígitos numéricos" value="{{ dados.telefone if dados else '' }}" required>
 
             <label for="email">Email:</label>
-            <input type="email" name="email" required>
+            <input type="email" name="email" value="{{ dados.email if dados else '' }}" required>
 
             <button type="submit" class="btn">Cadastrar Inquilino</button>
         </form>

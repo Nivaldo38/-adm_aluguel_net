@@ -200,32 +200,46 @@ def cadastrar_inquilino():
         unidade_id = request.form.get('unidade_id')
         local_id = request.form.get('local_id')
 
+        # Preparar dados para manter no formulário em caso de erro
+        dados_form = {
+            'nome': nome,
+            'cpf': cpf,
+            'data_nascimento': data_nascimento,
+            'idade': idade,
+            'endereco': endereco,
+            'cep': cep,
+            'telefone': telefone,
+            'email': email,
+            'unidade_id': unidade_id,
+            'local_id': local_id
+        }
+
         # Validações de campos obrigatórios
         if not nome or not cpf or not data_nascimento or not endereco or not cep or not telefone or not unidade_id or not email:
             flash('Preencha todos os campos obrigatórios.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Validar CPF
         if not validar_cpf(cpf):
             flash('CPF inválido. Insira 11 dígitos numéricos.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Validar email
         if not validar_email(email):
             flash('Email inválido.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Validar telefone
         if not validar_telefone(telefone):
             flash('Telefone inválido.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Converter data de nascimento para objeto datetime.date
         try:
             data_nasc = datetime.strptime(data_nascimento, '%Y-%m-%d').date()
         except Exception:
             flash('Data de nascimento inválida.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Calcular idade automaticamente, se não preenchida
         if not idade:
@@ -236,13 +250,13 @@ def cadastrar_inquilino():
         cpf_existente = Inquilino.query.filter_by(cpf=cpf).first()
         if cpf_existente:
             flash('CPF já cadastrado no sistema.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Verificar se a unidade já tem um inquilino ativo
         unidade_ocupada = Inquilino.query.filter_by(unidade_id=unidade_id).first()
         if unidade_ocupada:
             flash('Esta unidade já possui um inquilino cadastrado. Uma unidade só pode ter um inquilino ativo por vez.', 'danger')
-            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
+            return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades, dados=dados_form)
 
         # Criar novo objeto Inquilino
         novo = Inquilino(
@@ -1471,3 +1485,76 @@ def alterar_status_unidade(unidade_id, status):
         flash('Status inválido!', 'danger')
     
     return redirect(url_for('gerenciar_unidades', local_id=unidade.local_id))
+
+# Dashboard avançado com gráficos
+@app.route('/dashboard')
+def dashboard_avancado():
+    from datetime import datetime, timedelta
+    from sqlalchemy import func
+    
+    # Dados para gráficos
+    hoje = datetime.now()
+    inicio_mes = hoje.replace(day=1)
+    
+    # Receita mensal dos últimos 6 meses
+    receitas_mensais = []
+    for i in range(6):
+        mes = hoje - timedelta(days=30*i)
+        inicio = mes.replace(day=1)
+        fim = (inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        receita = db.session.query(func.sum(Contrato.valor_aluguel))\
+            .filter(Contrato.situacao == 'Ativo')\
+            .filter(Contrato.data_inicio <= fim)\
+            .filter((Contrato.data_fim.is_(None)) | (Contrato.data_fim >= inicio))\
+            .scalar() or 0
+        
+        receitas_mensais.append({
+            'mes': mes.strftime('%b/%Y'),
+            'valor': float(receita)
+        })
+    
+    # Status das unidades
+    status_unidades = db.session.query(
+        Unidade.status, 
+        func.count(Unidade.id)
+    ).group_by(Unidade.status).all()
+    
+    # Contratos por situação
+    contratos_situacao = db.session.query(
+        Contrato.situacao, 
+        func.count(Contrato.id)
+    ).group_by(Contrato.situacao).all()
+    
+    # Boletos pendentes
+    boletos_pendentes = Boleto.query.filter_by(status='pendente').count()
+    boletos_vencidos = Boleto.query.filter_by(status='vencido').count()
+    
+    # Contratos vencendo nos próximos 30 dias
+    contratos_vencendo = Contrato.query.filter(
+        Contrato.data_fim.isnot(None),
+        Contrato.data_fim <= hoje + timedelta(days=30),
+        Contrato.data_fim >= hoje,
+        Contrato.situacao == 'Ativo'
+    ).count()
+    
+    # Estatísticas gerais
+    stats = {
+        'total_locais': Local.query.count(),
+        'total_unidades': Unidade.query.count(),
+        'total_inquilinos': Inquilino.query.count(),
+        'contratos_ativos': Contrato.query.filter_by(situacao='Ativo').count(),
+        'receita_mensal': sum(c.valor_aluguel for c in Contrato.query.filter_by(situacao='Ativo').all()),
+        'boletos_pendentes': boletos_pendentes,
+        'boletos_vencidos': boletos_vencidos,
+        'contratos_vencendo': contratos_vencendo
+    }
+    
+    # Dados para gráficos
+    chart_data = {
+        'receitas_mensais': receitas_mensais,
+        'status_unidades': [{'status': s[0], 'count': s[1]} for s in status_unidades],
+        'contratos_situacao': [{'situacao': c[0], 'count': c[1]} for c in contratos_situacao]
+    }
+    
+    return render_template('dashboard.html', stats=stats, chart_data=chart_data)
