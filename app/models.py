@@ -11,7 +11,7 @@ class Unidade(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(120), nullable=False)
     local_id = db.Column(db.Integer, db.ForeignKey('local.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False, default='livre')  # novo campo status
+    status = db.Column(db.String(20), nullable=False, default='disponivel')  # disponivel, ocupada, manutencao
     inquilinos = db.relationship('Inquilino', backref='unidade', lazy=True)
     contratos = db.relationship('Contrato', backref='unidade', lazy=True)
 

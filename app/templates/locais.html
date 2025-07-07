@@ -79,6 +79,7 @@
                 <a class="btn ver" href="{{ url_for('listar_unidades', local_id=local.id) }}">Ver Unidades</a>
                 <a class="btn cadastrar" href="{{ url_for('cadastrar_unidade') }}?local_id={{ local.id }}">Cadastrar Unidade</a>
                 <a class="btn editar" href="{{ url_for('editar_local', local_id=local.id) }}">Editar Local</a>
+                <a class="btn" style="background: #6f42c1;" href="{{ url_for('gerenciar_unidades', local_id=local.id) }}">Gerenciar Status</a>
             </td>
         </tr>
         {% endfor %}

@@ -153,7 +153,7 @@
         <form method="GET" class="filtro-form">
             <select name="status" onchange="this.form.submit()">
                 <option value="">Todos os status</option>
-                <option value="livre" {% if request.args.get('status') == 'livre' %}selected{% endif %}>🟢 Livre</option>
+                <option value="disponivel" {% if request.args.get('status') == 'disponivel' %}selected{% endif %}>🟢 Disponível</option>
                 <option value="ocupada" {% if request.args.get('status') == 'ocupada' %}selected{% endif %}>🔴 Ocupada</option>
                 <option value="manutencao" {% if request.args.get('status') == 'manutencao' %}selected{% endif %}>🟡 Manutenção</option>
             </select>
@@ -167,8 +167,8 @@
             <span class="stat-value">{{ unidades|length }}</span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">Livres:</span>
-            <span class="stat-value livre">{{ unidades|selectattr('status', 'equalto', 'livre')|list|length }}</span>
+            <span class="stat-label">Disponíveis:</span>
+            <span class="stat-value livre">{{ unidades|selectattr('status', 'equalto', 'disponivel')|list|length }}</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">Ocupadas:</span>
@@ -194,12 +194,14 @@
             <tr class="status-{{ unidade.status }}">
                 <td>{{ unidade.nome }}</td>
                 <td>
-                    {% if unidade.status == 'livre' %}
-                        <span class="status-badge livre">🟢 Livre</span>
+                    {% if unidade.status == 'disponivel' %}
+                        <span class="status-badge livre">🟢 Disponível</span>
                     {% elif unidade.status == 'ocupada' %}
                         <span class="status-badge ocupada">🔴 Ocupada</span>
                     {% elif unidade.status == 'manutencao' %}
                         <span class="status-badge manutencao">🟡 Manutenção</span>
+                    {% else %}
+                        <span class="status-badge">{{ unidade.status }}</span>
                     {% endif %}
                 </td>
                 <td>

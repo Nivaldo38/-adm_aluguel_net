@@ -124,13 +124,16 @@ def cadastrar_unidade():
 @app.route('/unidades/<int:local_id>')
 def listar_unidades(local_id):
     local = Local.query.get_or_404(local_id)
+    status_filter = request.args.get('status', '')
     
-    # Filtro por status
-    status_filter = request.args.get('status')
+    # Query base
+    query = Unidade.query.filter_by(local_id=local_id)
+    
+    # Aplicar filtro de status se especificado
     if status_filter:
-        unidades = Unidade.query.filter_by(local_id=local_id, status=status_filter).all()
-    else:
-        unidades = Unidade.query.filter_by(local_id=local_id).all()
+        query = query.filter(Unidade.status == status_filter)
+    
+    unidades = query.all()
     
     return render_template('unidades_por_local.html', local=local, unidades=unidades)
 
@@ -174,7 +177,8 @@ def excluir_unidade(unidade_id):
 # API para busca dinâmica de unidades por local
 @app.route('/api/unidades/<int:local_id>')
 def api_unidades(local_id):
-    unidades = Unidade.query.filter_by(local_id=local_id).all()
+    # Filtrar apenas unidades disponíveis
+    unidades = Unidade.query.filter_by(local_id=local_id, status='disponivel').all()
     unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.status} for u in unidades]
     return jsonify(unidades_json)
 
@@ -254,13 +258,13 @@ def cadastrar_inquilino():
         )
         db.session.add(novo)
         
-        # Atualizar status da unidade para 'ocupada'
+        # Atualizar status da unidade para 'disponivel'
         unidade = Unidade.query.get(unidade_id)
         if unidade:
-            unidade.situacao = 'ocupada'
+            unidade.status = 'disponivel'
         
         db.session.commit()
-        flash('Inquilino cadastrado com sucesso! A unidade foi marcada como ocupada.', 'success')
+        flash('Inquilino cadastrado com sucesso! A unidade foi marcada como disponivel.', 'success')
         return redirect(url_for('index'))
 
     return render_template('cadastrar_inquilino.html', locais=locais, unidades=unidades)
@@ -351,13 +355,13 @@ def excluir_inquilino(inquilino_id):
     
     db.session.delete(inquilino)
     
-    # Atualizar status da unidade para 'livre'
+    # Atualizar status da unidade para 'disponivel'
     unidade = Unidade.query.get(unidade_id)
     if unidade:
-        unidade.situacao = 'livre'
+        unidade.status = 'disponivel'
     
     db.session.commit()
-    flash('Inquilino excluído com sucesso! A unidade foi marcada como livre.', 'success')
+    flash('Inquilino excluído com sucesso! A unidade foi marcada como disponivel.', 'success')
     return redirect(url_for('listar_inquilinos'))
 
 # Cadastrar contrato
@@ -475,6 +479,12 @@ def cadastrar_contrato():
         
         try:
             db.session.add(novo_contrato)
+            
+            # Atualizar status da unidade para 'ocupada'
+            unidade = Unidade.query.get(unidade_id)
+            if unidade:
+                unidade.status = 'ocupada'
+            
             db.session.commit()
             
             # Gerar contrato automaticamente
@@ -575,9 +585,17 @@ def editar_contrato(contrato_id):
 @app.route('/excluir_contrato/<int:contrato_id>')
 def excluir_contrato(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
+    unidade_id = contrato.unidade_id
+    
     db.session.delete(contrato)
+    
+    # Atualizar status da unidade para 'disponivel'
+    unidade = Unidade.query.get(unidade_id)
+    if unidade:
+        unidade.status = 'disponivel'
+    
     db.session.commit()
-    flash('Contrato excluído com sucesso!', 'success')
+    flash('Contrato excluído com sucesso! A unidade foi marcada como disponível.', 'success')
     return redirect(url_for('listar_contratos'))
 
 # ===== ROTAS PARA BOLETOS =====
@@ -1319,3 +1337,39 @@ def desativar_login_inquilino(inquilino_id):
     inquilino.situacao_login = 'inativo'
     db.session.commit()
     return True, "Login desativado com sucesso"
+
+# Gerenciar status de unidades
+@app.route('/gerenciar_unidades/<int:local_id>')
+def gerenciar_unidades(local_id):
+    local = Local.query.get_or_404(local_id)
+    unidades = Unidade.query.filter_by(local_id=local_id).all()
+    
+    # Estatísticas
+    total_unidades = len(unidades)
+    unidades_disponiveis = len([u for u in unidades if u.status == 'disponivel'])
+    unidades_ocupadas = len([u for u in unidades if u.status == 'ocupada'])
+    unidades_manutencao = len([u for u in unidades if u.status == 'manutencao'])
+    
+    return render_template('gerenciar_unidades.html', 
+                         local=local,
+                         unidades=unidades,
+                         stats={
+                             'total': total_unidades,
+                             'disponiveis': unidades_disponiveis,
+                             'ocupadas': unidades_ocupadas,
+                             'manutencao': unidades_manutencao
+                         })
+
+# Alterar status de unidade
+@app.route('/alterar_status_unidade/<int:unidade_id>/<status>')
+def alterar_status_unidade(unidade_id, status):
+    unidade = Unidade.query.get_or_404(unidade_id)
+    
+    if status in ['disponivel', 'ocupada', 'manutencao']:
+        unidade.status = status
+        db.session.commit()
+        flash(f'Status da unidade {unidade.nome} alterado para {status}!', 'success')
+    else:
+        flash('Status inválido!', 'danger')
+    
+    return redirect(url_for('gerenciar_unidades', local_id=unidade.local_id))
