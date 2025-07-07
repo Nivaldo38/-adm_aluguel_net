@@ -403,27 +403,83 @@ def cadastrar_contrato():
         # Validações
         if not all([local_id, unidade_id, inquilino_id, valor_aluguel, data_inicio, dia_vencimento, situacao]):
             flash('Preencha todos os campos obrigatórios.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            # Manter dados preenchidos
+            dados_form = {
+                'local_id': local_id,
+                'unidade_id': unidade_id,
+                'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel,
+                'data_inicio': data_inicio,
+                'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento,
+                'situacao': situacao,
+                'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome,
+                'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco,
+                'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email,
+                'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu,
+                'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Validar valor do aluguel
         try:
             valor_aluguel = float(valor_aluguel)
             if valor_aluguel <= 0:
                 flash('O valor do aluguel deve ser maior que zero.', 'danger')
-                return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+                dados_form = {
+                    'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                    'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                    'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                    'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                    'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                    'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                    'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+                }
+                return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
         except ValueError:
             flash('Valor do aluguel inválido.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            dados_form = {
+                'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Validar dia de vencimento
         try:
             dia_vencimento = int(dia_vencimento)
             if dia_vencimento < 1 or dia_vencimento > 31:
                 flash('Dia de vencimento deve estar entre 1 e 31.', 'danger')
-                return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+                dados_form = {
+                    'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                    'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                    'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                    'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                    'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                    'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                    'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+                }
+                return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
         except ValueError:
             flash('Dia de vencimento inválido.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            dados_form = {
+                'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Validar datas
         try:
@@ -432,10 +488,28 @@ def cadastrar_contrato():
                 data_fim = datetime.strptime(data_fim, '%Y-%m-%d')
                 if data_fim <= data_inicio:
                     flash('A data de término deve ser posterior à data de início.', 'danger')
-                    return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+                    dados_form = {
+                        'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                        'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                        'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                        'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                        'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                        'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                        'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+                    }
+                    return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
         except ValueError:
             flash('Data inválida.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            dados_form = {
+                'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Verificar se a unidade já tem contrato ativo
         contrato_existente = Contrato.query.filter_by(
@@ -445,7 +519,16 @@ def cadastrar_contrato():
         
         if contrato_existente:
             flash('Esta unidade já possui um contrato ativo. Finalize o contrato atual antes de criar um novo.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            dados_form = {
+                'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Verificar se o inquilino já tem contrato ativo
         contrato_inquilino = Contrato.query.filter_by(
@@ -455,7 +538,16 @@ def cadastrar_contrato():
         
         if contrato_inquilino:
             flash('Este inquilino já possui um contrato ativo. Finalize o contrato atual antes de criar um novo.', 'danger')
-            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador)
+            dados_form = {
+                'local_id': local_id, 'unidade_id': unidade_id, 'inquilino_id': inquilino_id,
+                'valor_aluguel': valor_aluguel, 'data_inicio': data_inicio, 'data_fim': data_fim,
+                'dia_vencimento': dia_vencimento, 'situacao': situacao, 'observacoes': observacoes,
+                'proprietario_nome': proprietario_nome, 'proprietario_cnpjcpf': proprietario_cnpjcpf,
+                'proprietario_endereco': proprietario_endereco, 'proprietario_telefone': proprietario_telefone,
+                'proprietario_email': proprietario_email, 'taxa_condominio': taxa_condominio,
+                'taxa_iptu': taxa_iptu, 'taxa_assinatura': taxa_assinatura
+            }
+            return render_template('cadastrar_contrato.html', locais=locais, inquilinos=inquilinos, dados_locador=dados_locador, dados_form=dados_form)
 
         # Criar contrato
         novo_contrato = Contrato(
