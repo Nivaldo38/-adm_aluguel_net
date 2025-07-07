@@ -489,14 +489,17 @@ def cadastrar_contrato():
             
             # Gerar contrato automaticamente
             try:
+                from app.contract_generator import ContractGenerator
+                generator = ContractGenerator()
+                
                 # Gerar PDF do contrato
-                # generator.generate_contract_pdf(novo_contrato, contract_path)
+                contract_path = generator.generate_contract_pdf(novo_contrato)
                 
                 # Atualizar caminho do arquivo no banco
-                # novo_contrato.arquivo_contrato = contract_path
-                # db.session.commit()
+                novo_contrato.arquivo_contrato = contract_path
+                db.session.commit()
                 
-                flash('Contrato cadastrado com sucesso!', 'success')
+                flash('Contrato cadastrado e PDF gerado com sucesso!', 'success')
             except Exception as e:
                 flash('Contrato cadastrado, mas houve erro na geração do documento. Tente novamente.', 'warning')
             
@@ -815,12 +818,15 @@ def visualizar_contrato(contrato_id):
 def regenerar_contrato(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
     try:
+        from app.contract_generator import ContractGenerator
+        generator = ContractGenerator()
+        
         # Gerar PDF do contrato
-        # generator.generate_contract_pdf(contrato, contract_path)
+        contract_path = generator.generate_contract_pdf(contrato)
         
         # Atualizar caminho do arquivo no banco
-        # novo_contrato.arquivo_contrato = contract_path
-        # db.session.commit()
+        contrato.arquivo_contrato = contract_path
+        db.session.commit()
         
         flash('Contrato regenerado com sucesso!', 'success')
     except Exception as e:
