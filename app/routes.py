@@ -12,6 +12,7 @@ import json
 from app.email_service import email_service
 from app.backup_service import BackupService
 from app.notification_service import notification_service
+from app.d4sign_service import d4sign_service
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Instanciar o serviço de backup
@@ -944,11 +945,11 @@ def regenerar_contrato(contrato_id):
         flash('Erro ao regenerar contrato. Tente novamente.', 'danger')
     return redirect(url_for('listar_contratos'))
 
-# ===== ROTAS PARA ASSINATURA DIGITAL DS4 =====
+# ===== ROTAS PARA ASSINATURA DIGITAL D4SIGN =====
 
-# @app.route('/enviar_para_assinatura/<int:contrato_id>')
+@app.route('/enviar_para_assinatura/<int:contrato_id>')
 def enviar_para_assinatura(contrato_id):
-    """Envia contrato para assinatura digital via DS4"""
+    """Envia contrato para assinatura digital via D4Sign"""
     contrato = Contrato.query.get_or_404(contrato_id)
     
     if not contrato.arquivo_contrato:
@@ -962,13 +963,11 @@ def enviar_para_assinatura(contrato_id):
         return redirect(url_for('listar_contratos'))
     
     try:
-        ds4 = get_ds4_instance()
-        result = ds4.send_contract_for_signature(contrato, file_path)
+        # Enviar para assinatura via D4Sign
+        result = d4sign_service.send_contract_for_signature(contrato)
         
         if result['success']:
-            contrato.data_envio_assinatura = datetime.now()
-            db.session.commit()
-            flash(f"Contrato enviado para assinatura digital! Envelope ID: {result['envelope_id']}", 'success')
+            flash(result['message'], 'success')
         else:
             flash(f"Erro ao enviar para assinatura: {result['message']}", 'danger')
             

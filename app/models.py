@@ -74,8 +74,8 @@ class Contrato(db.Model):
     taxa_iptu = db.Column(db.Float, nullable=True)  # Corrigido nome
     taxa_assinatura = db.Column(db.Float, nullable=True)
     arquivo_contrato = db.Column(db.String(500), nullable=True)  # Caminho do arquivo PDF
-    # Campos para assinatura digital DS4
-    envelope_id = db.Column(db.String(100), nullable=True)  # ID do envelope no DS4
+    # Campos para assinatura digital D4Sign
+    envelope_id = db.Column(db.String(100), nullable=True)  # ID do envelope no D4Sign
     status_assinatura = db.Column(db.String(20), nullable=True, default='nao_enviado')  # nao_enviado, enviado, assinado, cancelado
     arquivo_contrato_assinado = db.Column(db.String(500), nullable=True)  # Caminho do arquivo PDF assinado
     data_envio_assinatura = db.Column(db.DateTime, nullable=True)

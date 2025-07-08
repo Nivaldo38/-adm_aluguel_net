@@ -29,7 +29,7 @@ def start_scheduler():
     schedule.every().sunday.at("09:00").do(run_notification_checks)
     
     # Agendar verificações mensais no primeiro dia do mês às 10:00
-    schedule.every().month.at("10:00").do(run_notification_checks)
+    schedule.every().day.at("10:00").do(run_notification_checks)
     
     print("📅 Agendamentos configurados:")
     print("   - Diário: 08:00")
