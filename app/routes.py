@@ -1600,7 +1600,8 @@ def enviar_notificacao_teste():
         success = email_service.send_email(
             to_email=inquilino.email,
             subject="Teste de Notificação - Sistema de Aluguel",
-            html_content="""
+            body="Teste de notificação automática",
+            html_body="""
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
                     <h1>🏠 Sistema de Administração de Aluguel</h1>
