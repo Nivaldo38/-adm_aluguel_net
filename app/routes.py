@@ -15,8 +15,7 @@ from app.notification_service import notification_service
 from app.d4sign_service import d4sign_service
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Instanciar o serviço de backup
-backup_service = BackupService()
+# Instanciar o serviço de backup (será criado quando necessário)
 
 # Função para validar CPF (apenas números e tamanho correto)
 def validar_cpf(cpf):
@@ -725,12 +724,12 @@ def listar_boletos():
     # Atualizar status de boletos vencidos
     hoje = datetime.now().date()
     boletos_vencidos = Boleto.query.filter(
-        Boleto.situacao == 'pendente',
+        Boleto.status == 'pendente',
         Boleto.data_vencimento < hoje
     ).all()
     
     for boleto in boletos_vencidos:
-        boleto.situacao = 'vencido'
+        boleto.status = 'vencido'
     
     if boletos_vencidos:
         db.session.commit()
@@ -738,7 +737,7 @@ def listar_boletos():
     query = Boleto.query
     
     if status_filter:
-        query = query.filter(Boleto.situacao == status_filter)
+        query = query.filter(Boleto.status == status_filter)
     
     if contrato_id:
         query = query.filter(Boleto.contrato_id == contrato_id)
@@ -747,9 +746,9 @@ def listar_boletos():
     
     # Estatísticas
     total_boletos = len(boletos)
-    boletos_pendentes = len([b for b in boletos if b.situacao == 'pendente'])
-    boletos_pagos = len([b for b in boletos if b.situacao == 'pago'])
-    boletos_vencidos = len([b for b in boletos if b.situacao == 'vencido'])
+    boletos_pendentes = len([b for b in boletos if b.status == 'pendente'])
+    boletos_pagos = len([b for b in boletos if b.status == 'pago'])
+    boletos_vencidos = len([b for b in boletos if b.status == 'vencido'])
     
     return render_template('listar_boletos.html', 
                          boletos=boletos, 
@@ -828,7 +827,7 @@ def gerar_boleto(contrato_id):
 @app.route('/marcar_pago/<int:boleto_id>')
 def marcar_pago(boleto_id):
     boleto = Boleto.query.get_or_404(boleto_id)
-    boleto.situacao = 'pago'
+    boleto.status = 'pago'
     boleto.data_pagamento = datetime.now()
     db.session.commit()
     flash('Boleto marcado como pago!', 'success')
@@ -838,7 +837,7 @@ def marcar_pago(boleto_id):
 @app.route('/cancelar_boleto/<int:boleto_id>')
 def cancelar_boleto(boleto_id):
     boleto = Boleto.query.get_or_404(boleto_id)
-    boleto.situacao = 'cancelado'
+    boleto.status = 'cancelado'
     db.session.commit()
     flash('Boleto cancelado!', 'success')
     return redirect(url_for('listar_boletos'))
@@ -1118,6 +1117,7 @@ def enviar_relatorio_mensal(contrato_id):
 @app.route('/backup')
 def backup_page():
     """Página de gerenciamento de backup"""
+    backup_service = BackupService()
     backups = backup_service.list_backups()
     
     # Carregar log de backups
@@ -1137,6 +1137,7 @@ def backup_page():
 @app.route('/criar_backup')
 def criar_backup():
     """Cria backup manual"""
+    backup_service = BackupService()
     backup_path = backup_service.create_backup()
     if backup_path:
         flash('Backup criado com sucesso.', 'success')
@@ -1147,6 +1148,7 @@ def criar_backup():
 @app.route('/restaurar_backup/<filename>')
 def restaurar_backup(filename):
     """Restaura backup"""
+    backup_service = BackupService()
     backup_path = os.path.join(backup_service.backup_dir, filename)
     success = backup_service.restore_backup(backup_path)
     if success:
@@ -1158,6 +1160,7 @@ def restaurar_backup(filename):
 @app.route('/baixar_backup/<filename>')
 def baixar_backup(filename):
     """Baixa arquivo de backup"""
+    backup_service = BackupService()
     backup_path = os.path.join(backup_service.backup_dir, filename)
     if os.path.exists(backup_path):
         return send_file(backup_path, as_attachment=True)
@@ -1278,7 +1281,7 @@ def inquilino_dashboard():
     debitos = 0
     if contrato and boletos:
         for boleto in boletos:
-            if boleto.situacao == 'Pendente' and boleto.data_vencimento < datetime.now().date():
+            if boleto.status == 'pendente' and boleto.data_vencimento < datetime.now().date():
                 debitos += boleto.valor
     
     return render_template('inquilino/dashboard.html', 

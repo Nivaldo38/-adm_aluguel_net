@@ -1,3 +1,4 @@
+ 
 {% extends "base_modern.html" %}
 
 {% block title %}Dashboard - Sistema de Administração de Aluguel{% endblock %}
@@ -106,7 +107,7 @@
         <!-- Quick Actions Card -->
         <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações Rápidas</h3>
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-4 gap-4">
                 <a href="{{ url_for('cadastrar_local') }}" class="flex flex-col items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-200 group">
                     <i class="fas fa-plus-circle text-blue-600 dark:text-blue-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Novo Local</span>
@@ -137,9 +138,26 @@
                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Gerar Boletos</span>
                 </a>
                 
+                <a href="{{ url_for('listar_boletos') }}" class="flex flex-col items-center p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-list-alt text-amber-600 dark:text-amber-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Listar Boletos</span>
+                </a>
+                
                 <a href="{{ url_for('dashboard_avancado') }}" class="flex flex-col items-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors duration-200 group">
                     <i class="fas fa-chart-line text-red-600 dark:text-red-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Dashboard</span>
+                </a>
+                
+
+                <a href="{{ url_for('listar_contratos') }}" class="flex flex-col items-center p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-file-contract text-teal-600 dark:text-teal-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Listar Contratos</span>
+                </a>
+                
+
+                <a href="{{ url_for('notificacoes_page') }}" class="flex flex-col items-center p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-900/40 transition-colors duration-200 group">
+                    <i class="fas fa-bell text-pink-600 dark:text-pink-400 text-2xl mb-2 group-hover:scale-110 transition-transform duration-200"></i>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Notificações</span>
                 </a>
             </div>
         </div>

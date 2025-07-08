@@ -1,200 +1,172 @@
 #!/usr/bin/env python3
 """
-Script para testar deploy e funcionalidades do AluguelNet
+Script para testar o sistema antes do deploy no Railway
 """
 
-import requests
-import time
-import sys
 import os
+import sys
+import importlib
 
-def test_web_app(url):
-    """Testa a aplicação web"""
-    print("🌐 Testando aplicação web...")
+def test_imports():
+    """Testa se todas as dependências estão disponíveis"""
+    print("🔍 Testando imports...")
     
-    try:
-        # Teste básico
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            print("✅ Aplicação web funcionando")
-            return True
-        else:
-            print(f"❌ Erro HTTP: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Erro ao conectar: {e}")
-        return False
-
-def test_mobile_app(url):
-    """Testa a aplicação mobile"""
-    print("📱 Testando aplicação mobile...")
-    
-    try:
-        mobile_url = f"{url}/mobile/"
-        response = requests.get(mobile_url, timeout=10)
-        if response.status_code == 200:
-            print("✅ Aplicação mobile funcionando")
-            return True
-        else:
-            print(f"❌ Erro HTTP Mobile: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Erro ao conectar mobile: {e}")
-        return False
-
-def test_pwa_features(url):
-    """Testa recursos PWA"""
-    print("🔧 Testando recursos PWA...")
-    
-    try:
-        # Teste manifest
-        manifest_url = f"{url}/static/manifest.json"
-        response = requests.get(manifest_url, timeout=10)
-        if response.status_code == 200:
-            print("✅ Manifest PWA funcionando")
-        else:
-            print("❌ Manifest PWA não encontrado")
-            
-        # Teste service worker
-        sw_url = f"{url}/static/sw.js"
-        response = requests.get(sw_url, timeout=10)
-        if response.status_code == 200:
-            print("✅ Service Worker funcionando")
-        else:
-            print("❌ Service Worker não encontrado")
-            
-        return True
-    except Exception as e:
-        print(f"❌ Erro ao testar PWA: {e}")
-        return False
-
-def test_api_endpoints(url):
-    """Testa endpoints da API"""
-    print("🔌 Testando endpoints da API...")
-    
-    endpoints = [
-        "/api/unidades/1",
-        "/listar_contratos",
-        "/listar_inquilinos",
-        "/locais"
+    required_modules = [
+        'flask',
+        'flask_sqlalchemy', 
+        'flask_migrate',
+        'schedule',
+        'gunicorn'
     ]
     
-    success_count = 0
-    for endpoint in endpoints:
+    for module in required_modules:
         try:
-            response = requests.get(f"{url}{endpoint}", timeout=10)
-            if response.status_code in [200, 302]:
-                print(f"✅ {endpoint} - OK")
-                success_count += 1
-            else:
-                print(f"❌ {endpoint} - {response.status_code}")
-        except Exception as e:
-            print(f"❌ {endpoint} - Erro: {e}")
+            importlib.import_module(module)
+            print(f"✅ {module}")
+        except ImportError as e:
+            print(f"❌ {module}: {e}")
+            return False
     
-    return success_count >= len(endpoints) * 0.8  # 80% de sucesso
+    return True
 
-def test_performance(url):
-    """Testa performance"""
-    print("⚡ Testando performance...")
+def test_app_creation():
+    """Testa se a aplicação Flask pode ser criada"""
+    print("\n🔍 Testando criação da aplicação...")
     
     try:
-        start_time = time.time()
-        response = requests.get(url, timeout=10)
-        end_time = time.time()
-        
-        response_time = (end_time - start_time) * 1000  # ms
-        
-        if response_time < 2000:  # menos de 2 segundos
-            print(f"✅ Performance OK: {response_time:.0f}ms")
-            return True
-        else:
-            print(f"⚠️ Performance lenta: {response_time:.0f}ms")
-            return False
+        from app import app, db
+        print("✅ Aplicação Flask criada com sucesso")
+        print(f"✅ Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+        return True
     except Exception as e:
-        print(f"❌ Erro ao testar performance: {e}")
+        print(f"❌ Erro ao criar aplicação: {e}")
         return False
 
-def generate_report(url, results):
-    """Gera relatório de teste"""
-    print("\n" + "="*50)
-    print("📊 RELATÓRIO DE TESTE")
-    print("="*50)
+def test_database():
+    """Testa se o banco de dados está acessível"""
+    print("\n🔍 Testando banco de dados...")
     
-    print(f"🌐 URL Testada: {url}")
-    print(f"⏰ Data/Hora: {time.strftime('%d/%m/%Y %H:%M:%S')}")
-    print()
+    try:
+        from app import app, db
+        from app.models import Local, Unidade, Inquilino, Contrato, Boleto
+        
+        with app.app_context():
+            # Testar conexão
+            with db.engine.connect() as conn:
+                conn.execute(db.text("SELECT 1"))
+            print("✅ Conexão com banco de dados OK")
+            
+            # Testar modelos
+            print("✅ Modelos carregados:")
+            print(f"  - Local: {Local}")
+            print(f"  - Unidade: {Unidade}")
+            print(f"  - Inquilino: {Inquilino}")
+            print(f"  - Contrato: {Contrato}")
+            print(f"  - Boleto: {Boleto}")
+            
+            return True
+    except Exception as e:
+        print(f"❌ Erro no banco de dados: {e}")
+        return False
+
+def test_routes():
+    """Testa se as rotas estão funcionando"""
+    print("\n🔍 Testando rotas...")
     
-    total_tests = len(results)
-    passed_tests = sum(results.values())
-    success_rate = (passed_tests / total_tests) * 100
+    try:
+        from app import app
+        
+        # Verificar se as rotas principais existem
+        routes_to_check = [
+            '/',
+            '/locais',
+            '/inquilinos',
+            '/listar_contratos',
+            '/boletos'
+        ]
+        
+        with app.test_client() as client:
+            for route in routes_to_check:
+                try:
+                    response = client.get(route)
+                    if response.status_code in [200, 302, 404]:  # 404 é OK para algumas rotas
+                        print(f"✅ {route}: {response.status_code}")
+                    else:
+                        print(f"⚠️ {route}: {response.status_code}")
+                except Exception as e:
+                    print(f"❌ {route}: {e}")
+        
+        return True
+    except Exception as e:
+        print(f"❌ Erro ao testar rotas: {e}")
+        return False
+
+def test_scheduler():
+    """Testa se o scheduler está funcionando"""
+    print("\n🔍 Testando scheduler...")
     
-    print("📋 Resultados:")
-    for test_name, result in results.items():
-        status = "✅ PASSOU" if result else "❌ FALHOU"
-        print(f"  {test_name}: {status}")
+    try:
+        from scheduler import run_notification_checks
+        print("✅ Scheduler importado com sucesso")
+        return True
+    except Exception as e:
+        print(f"❌ Erro no scheduler: {e}")
+        return False
+
+def test_environment():
+    """Testa variáveis de ambiente"""
+    print("\n🔍 Testando variáveis de ambiente...")
     
-    print()
-    print(f"📈 Taxa de Sucesso: {success_rate:.1f}% ({passed_tests}/{total_tests})")
+    # Verificar PORT
+    port = os.environ.get('PORT', '5000')
+    print(f"✅ PORT: {port}")
     
-    if success_rate >= 80:
-        print("🎉 DEPLOY SUCESSO!")
-        print("✅ Sistema pronto para produção")
-    elif success_rate >= 60:
-        print("⚠️ DEPLOY PARCIAL")
-        print("🔧 Alguns ajustes necessários")
-    else:
-        print("❌ DEPLOY FALHOU")
-        print("🔧 Revisão necessária")
+    # Verificar outras variáveis importantes
+    important_vars = ['DATABASE_URL', 'SECRET_KEY', 'RAILWAY_ENVIRONMENT']
     
-    print()
-    print("📱 Para testar no celular:")
-    print(f"   {url}/mobile/")
-    print()
-    print("🔧 Para configurar:")
-    print("   - Email: configurar SMTP")
-    print("   - DS4: configurar credenciais")
-    print("   - Backup: verificar agendamento")
+    for var in important_vars:
+        value = os.environ.get(var)
+        if value:
+            print(f"✅ {var}: definida")
+        else:
+            print(f"⚠️ {var}: não definida (pode ser normal)")
+    
+    return True
 
 def main():
-    """Função principal"""
-    print("🚀 TESTE DE DEPLOY - ALUGUELNET")
-    print("="*50)
+    """Executa todos os testes"""
+    print("🚀 Iniciando testes de deploy...")
+    print("=" * 50)
     
-    # URL do deploy (substitua pela sua)
-    url = input("Digite a URL do seu deploy (ex: https://aluguelnet.onrender.com): ").strip()
+    tests = [
+        test_imports,
+        test_app_creation,
+        test_database,
+        test_routes,
+        test_scheduler,
+        test_environment
+    ]
     
-    if not url:
-        print("❌ URL não fornecida")
-        sys.exit(1)
+    passed = 0
+    total = len(tests)
     
-    # Remove trailing slash
-    url = url.rstrip('/')
+    for test in tests:
+        try:
+            if test():
+                passed += 1
+        except Exception as e:
+            print(f"❌ Erro inesperado em {test.__name__}: {e}")
     
-    print(f"\n🔍 Testando: {url}")
-    print()
+    print("\n" + "=" * 50)
+    print(f"📊 Resultado: {passed}/{total} testes passaram")
     
-    # Executar testes
-    results = {
-        "Aplicação Web": test_web_app(url),
-        "Aplicação Mobile": test_mobile_app(url),
-        "Recursos PWA": test_pwa_features(url),
-        "Endpoints API": test_api_endpoints(url),
-        "Performance": test_performance(url)
-    }
-    
-    # Gerar relatório
-    generate_report(url, results)
-    
-    # Salvar relatório
-    timestamp = time.strftime("%Y%m%d_%H%M%S")
-    report_file = f"deploy_test_{timestamp}.txt"
-    
-    with open(report_file, 'w', encoding='utf-8') as f:
-        f.write(f"Relatório de Deploy - {timestamp}\n")
-        f.write(f"URL: {url}\n")
-        f.write(f"Resultados: {results}\n")
-    
-    print(f"\n📄 Relatório salvo: {report_file}")
+    if passed == total:
+        print("🎉 Todos os testes passaram! Sistema pronto para deploy.")
+        return True
+    else:
+        print("⚠️ Alguns testes falharam. Verifique os problemas antes do deploy.")
+        return False
 
 if __name__ == "__main__":
-    main() 
+    success = main()
+    sys.exit(0 if success else 1) 

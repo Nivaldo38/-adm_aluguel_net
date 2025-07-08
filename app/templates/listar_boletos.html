@@ -231,6 +231,7 @@
                             {% if boleto.link_boleto %}
                                 <a href="{{ boleto.link_boleto }}" target="_blank" class="action-btn edit-btn">📄 Ver Boleto</a>
                             {% endif %}
+                            <a href="{{ url_for('enviar_notificacao_boleto', boleto_id=boleto.id) }}" class="action-btn edit-btn" onclick="return confirm('Enviar notificação de boleto para {{ boleto.contrato.inquilino.nome }}?')">🔔 Notificar</a>
                             <a href="{{ url_for('excluir_boleto', boleto_id=boleto.id) }}" class="action-btn delete-btn" onclick="return confirm('Excluir boleto?')">🗑️ Excluir</a>
                         </div>
                     </td>

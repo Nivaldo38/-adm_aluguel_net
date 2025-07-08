@@ -13,7 +13,12 @@ def run_notification_checks():
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔔 Executando verificações automáticas de notificações...")
     
     try:
-        notification_service.run_daily_checks()
+        # Importar aqui para evitar problemas de contexto
+        from app import app
+        from app.notification_service import notification_service
+        
+        with app.app_context():
+            notification_service.run_daily_checks()
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Verificações concluídas com sucesso!")
     except Exception as e:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❌ Erro ao executar verificações: {e}")
@@ -29,7 +34,12 @@ def start_scheduler():
     schedule.every().sunday.at("09:00").do(run_notification_checks)
     
     # Agendar verificações mensais no primeiro dia do mês às 10:00
-    schedule.every().day.at("10:00").do(run_notification_checks)
+    def run_monthly_checks():
+        """Executa verificações apenas no primeiro dia do mês"""
+        if datetime.now().day == 1:
+            run_notification_checks()
+    
+    schedule.every().day.at("10:00").do(run_monthly_checks)
     
     print("📅 Agendamentos configurados:")
     print("   - Diário: 08:00")
