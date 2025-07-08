@@ -1,0 +1,280 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Notificações - Sistema de Aluguel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-bell text-primary"></i>
+                    Sistema de Notificações
+                </h1>
+                <div>
+                    <a href="{{ url_for('enviar_notificacao_teste') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar Teste
+                    </a>
+                    <a href="{{ url_for('executar_verificacoes') }}" class="btn btn-success">
+                        <i class="fas fa-play"></i> Executar Verificações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.total }}</h4>
+                            <p class="card-text">Total de Notificações</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.success }}</h4>
+                            <p class="card-text">Enviadas com Sucesso</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.failed }}</h4>
+                            <p class="card-text">Falhas no Envio</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ stats.types|length }}</h4>
+                            <p class="card-text">Tipos de Notificação</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tags fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipos de Notificação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie"></i> Tipos de Notificação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.types %}
+                        <div class="row">
+                            {% for tipo, quantidade in stats.types.items() %}
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex align-items-center p-3 border rounded">
+                                    <div class="me-3">
+                                        {% if tipo == 'boleto_vencimento' %}
+                                            <i class="fas fa-file-invoice-dollar text-warning fa-2x"></i>
+                                        {% elif tipo == 'contrato_vencimento' %}
+                                            <i class="fas fa-file-contract text-info fa-2x"></i>
+                                        {% elif tipo == 'manutencao' %}
+                                            <i class="fas fa-tools text-danger fa-2x"></i>
+                                        {% else %}
+                                            <i class="fas fa-bell text-primary fa-2x"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">
+                                            {% if tipo == 'boleto_vencimento' %}
+                                                Boletos Vencendo
+                                            {% elif tipo == 'contrato_vencimento' %}
+                                                Contratos Vencendo
+                                            {% elif tipo == 'manutencao' %}
+                                                Manutenção
+                                            {% else %}
+                                                {{ tipo|title }}
+                                            {% endif %}
+                                        </h6>
+                                        <span class="badge bg-primary">{{ quantidade }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Nenhuma notificação registrada ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog"></i> Configurações de Notificação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>🔔 Boletos Vencendo</h6>
+                        <p class="text-muted">Notificações enviadas 3 dias antes do vencimento</p>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="boletosEnabled" checked>
+                            <label class="form-check-label" for="boletosEnabled">
+                                Ativar notificações de boletos
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>📄 Contratos Vencendo</h6>
+                        <p class="text-muted">Notificações enviadas 30 dias antes do vencimento</p>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="contratosEnabled" checked>
+                            <label class="form-check-label" for="contratosEnabled">
+                                Ativar notificações de contratos
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>🔧 Manutenção</h6>
+                        <p class="text-muted">Alertas para unidades em manutenção há mais de 7 dias</p>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="manutencaoEnabled" checked>
+                            <label class="form-check-label" for="manutencaoEnabled">
+                                Ativar alertas de manutenção
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock"></i> Agendamento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>⏰ Verificações Automáticas</h6>
+                        <p class="text-muted">As verificações são executadas automaticamente todos os dias às 8:00</p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Próxima verificação:</strong> Amanhã às 8:00
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>📧 Configuração de Email</h6>
+                        <p class="text-muted">As notificações são enviadas usando a configuração de email do sistema</p>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Configurar Email
+                        </a>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>📊 Relatórios</h6>
+                        <p class="text-muted">Relatórios mensais são enviados automaticamente no primeiro dia do mês</p>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="relatoriosEnabled" checked>
+                            <label class="form-check-label" for="relatoriosEnabled">
+                                Ativar relatórios mensais
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log de Notificações -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list"></i> Log de Notificações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        O log detalhado de notificações está disponível no arquivo <code>notifications/notification_log.json</code>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">
+                                        Log detalhado disponível no arquivo do sistema
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Salvar configurações
+document.querySelectorAll('.form-check-input').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        // Aqui você pode implementar a lógica para salvar as configurações
+        console.log('Configuração alterada:', this.id, this.checked);
+    });
+});
+</script>
+{% endblock %} 

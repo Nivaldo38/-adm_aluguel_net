@@ -11,6 +11,7 @@ import json
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
 from app.backup_service import BackupService
+from app.notification_service import notification_service
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Instanciar o serviço de backup
@@ -1575,3 +1576,71 @@ def dashboard_avancado():
     }
     
     return render_template('dashboard.html', stats=stats, chart_data=chart_data)
+
+# ===== ROTAS DE NOTIFICAÇÕES =====
+
+@app.route('/notificacoes')
+def notificacoes_page():
+    """Página de gerenciamento de notificações"""
+    stats = notification_service.get_notification_stats()
+    return render_template('notificacoes.html', stats=stats)
+
+@app.route('/enviar_notificacao_teste')
+def enviar_notificacao_teste():
+    """Envia notificação de teste"""
+    try:
+        # Buscar primeiro inquilino com email
+        inquilino = Inquilino.query.filter(Inquilino.email.isnot(None)).first()
+        
+        if not inquilino:
+            flash('Nenhum inquilino com email cadastrado encontrado.', 'warning')
+            return redirect(url_for('notificacoes_page'))
+        
+        # Enviar email de teste
+        success = email_service.send_email(
+            to_email=inquilino.email,
+            subject="Teste de Notificação - Sistema de Aluguel",
+            html_content="""
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center;">
+                    <h1>🏠 Sistema de Administração de Aluguel</h1>
+                    <h2>Teste de Notificação</h2>
+                </div>
+                
+                <div style="padding: 20px; background: #f8f9fa;">
+                    <h3>Olá!</h3>
+                    <p>Este é um email de teste do sistema de notificações.</p>
+                    
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #28a745;">
+                        <h4>✅ Sistema Funcionando</h4>
+                        <p>As notificações automáticas estão configuradas e funcionando corretamente.</p>
+                    </div>
+                </div>
+                
+                <div style="background: #e9ecef; padding: 15px; text-align: center; font-size: 12px; color: #6c757d;">
+                    <p>Este é um email de teste do sistema de administração de aluguel.</p>
+                </div>
+            </div>
+            """
+        )
+        
+        if success:
+            flash('Notificação de teste enviada com sucesso!', 'success')
+        else:
+            flash('Erro ao enviar notificação de teste.', 'danger')
+            
+    except Exception as e:
+        flash(f'Erro ao enviar notificação: {e}', 'danger')
+    
+    return redirect(url_for('notificacoes_page'))
+
+@app.route('/executar_verificacoes')
+def executar_verificacoes():
+    """Executa verificações de notificações manualmente"""
+    try:
+        notification_service.run_daily_checks()
+        flash('Verificações executadas com sucesso!', 'success')
+    except Exception as e:
+        flash(f'Erro ao executar verificações: {e}', 'danger')
+    
+    return redirect(url_for('notificacoes_page'))
