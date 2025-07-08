@@ -10,4 +10,11 @@ keepalive = 2
 max_requests = 1000
 max_requests_jitter = 50
 preload_app = True
-reload = False 
+reload = False
+
+# Configurações de log para debug
+loglevel = "debug"
+accesslog = "-"
+errorlog = "-"
+capture_output = True
+enable_stdio_inheritance = True 

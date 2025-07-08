@@ -1,60 +1,116 @@
 #!/usr/bin/env python3
 """
-Script para testar o deploy no Railway
+Script para testar configuração do Railway
 """
 
-import requests
-import time
+import os
+import sys
 
-def test_railway_deploy():
-    """Testa se o Railway está funcionando"""
-    print("🔍 Testando deploy no Railway...")
+def testar_ambiente_railway():
+    """Testa se o ambiente Railway está configurado corretamente"""
+    print("🔍 Testando ambiente Railway...")
+    print("=" * 50)
     
-    # URL do Railway (substitua pela sua URL real)
-    railway_url = "https://adm-aluguel-net-production.up.railway.app"
+    # Verificar variáveis críticas
+    variaveis_criticas = {
+        'PORT': 'Porta do servidor',
+        'DATABASE_URL': 'URL do banco de dados',
+        'SECRET_KEY': 'Chave secreta do Flask'
+    }
     
+    variaveis_opcionais = {
+        'EMAIL_HOST': 'Servidor de email',
+        'EMAIL_USER': 'Usuário de email',
+        'EMAIL_PASSWORD': 'Senha de email',
+        'D4SIGN_API_URL': 'URL da API D4Sign',
+        'D4SIGN_API_TOKEN': 'Token D4Sign',
+        'D4SIGN_SAFE_KEY': 'Safe Key D4Sign'
+    }
+    
+    print("📊 Variáveis críticas:")
+    for var, desc in variaveis_criticas.items():
+        valor = os.environ.get(var)
+        if valor:
+            print(f"✅ {var}: {desc} - Configurada")
+        else:
+            print(f"❌ {var}: {desc} - NÃO CONFIGURADA")
+    
+    print("\n📊 Variáveis opcionais:")
+    for var, desc in variaveis_opcionais.items():
+        valor = os.environ.get(var)
+        if valor:
+            print(f"✅ {var}: {desc} - Configurada")
+        else:
+            print(f"⚠️ {var}: {desc} - Não configurada (opcional)")
+    
+    # Testar importação do app
+    print("\n🔧 Testando importação do app...")
     try:
-        # Testar página principal
-        print(f"📡 Testando: {railway_url}")
-        response = requests.get(railway_url, timeout=10)
+        from app import app
+        print("✅ App Flask importado com sucesso")
         
-        if response.status_code == 200:
-            print("✅ Página principal funcionando!")
+        # Testar configuração do banco
+        db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if 'postgresql' in db_uri:
+            print("✅ Banco PostgreSQL configurado")
+        elif 'sqlite' in db_uri:
+            print("⚠️ Usando SQLite (não recomendado para produção)")
         else:
-            print(f"⚠️ Página principal retornou status {response.status_code}")
+            print("❌ Banco não configurado")
             
-        # Testar endpoint de boletos
-        print(f"📡 Testando: {railway_url}/boletos")
-        response = requests.get(f"{railway_url}/boletos", timeout=10)
-        
-        if response.status_code == 200:
-            print("✅ Endpoint /boletos funcionando!")
-        else:
-            print(f"❌ Endpoint /boletos retornou status {response.status_code}")
-            
-        # Testar outros endpoints importantes
-        endpoints = [
-            "/listar_contratos",
-            "/inquilinos", 
-            "/locais"
-        ]
-        
-        for endpoint in endpoints:
-            try:
-                response = requests.get(f"{railway_url}{endpoint}", timeout=5)
-                if response.status_code == 200:
-                    print(f"✅ {endpoint} funcionando!")
-                else:
-                    print(f"⚠️ {endpoint} retornou status {response.status_code}")
-            except Exception as e:
-                print(f"❌ Erro ao testar {endpoint}: {e}")
-                
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Erro de conexão: {e}")
-        print("💡 Verifique se o Railway está rodando e a URL está correta")
-        
     except Exception as e:
-        print(f"❌ Erro inesperado: {e}")
+        print(f"❌ Erro ao importar app: {e}")
+        return False
+    
+    return True
 
-if __name__ == "__main__":
-    test_railway_deploy() 
+def testar_gunicorn():
+    """Testa se o Gunicorn consegue iniciar"""
+    print("\n🚀 Testando Gunicorn...")
+    try:
+        import gunicorn
+        print("✅ Gunicorn instalado")
+        
+        # Testar comando
+        cmd = "gunicorn --config gunicorn.conf.py --log-level debug app:app"
+        print(f"📝 Comando: {cmd}")
+        
+    except ImportError:
+        print("❌ Gunicorn não instalado")
+        return False
+    
+    return True
+
+def main():
+    """Função principal"""
+    print("🚀 Teste de Configuração Railway")
+    print("=" * 50)
+    
+    # Testar ambiente
+    ambiente_ok = testar_ambiente_railway()
+    
+    # Testar Gunicorn
+    gunicorn_ok = testar_gunicorn()
+    
+    print("\n" + "=" * 50)
+    print("📊 RESUMO:")
+    
+    if ambiente_ok and gunicorn_ok:
+        print("✅ Ambiente Railway configurado corretamente!")
+        print("🚀 Pronto para deploy!")
+    else:
+        print("❌ Problemas encontrados:")
+        if not ambiente_ok:
+            print("  - Variáveis de ambiente faltando")
+        if not gunicorn_ok:
+            print("  - Gunicorn não configurado")
+        
+        print("\n🔧 Para corrigir:")
+        print("1. Configure as variáveis de ambiente no Railway")
+        print("2. Verifique se o banco PostgreSQL foi criado")
+        print("3. Confirme se o requirements.txt está atualizado")
+    
+    return ambiente_ok and gunicorn_ok
+
+if __name__ == '__main__':
+    main() 

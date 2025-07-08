@@ -187,6 +187,33 @@ def api_unidades(local_id):
     unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.status} for u in unidades]
     return jsonify(unidades_json)
 
+# API para unidades disponíveis (incluindo status)
+@app.route('/api/unidades_disponiveis/<int:local_id>')
+def api_unidades_disponiveis(local_id):
+    # Retornar todas as unidades com status
+    unidades = Unidade.query.filter_by(local_id=local_id).all()
+    unidades_json = [{'id': u.id, 'nome': u.nome, 'status': u.status} for u in unidades]
+    return jsonify(unidades_json)
+
+# API para dados do inquilino
+@app.route('/api/inquilino/<int:inquilino_id>')
+def api_inquilino(inquilino_id):
+    inquilino = Inquilino.query.get_or_404(inquilino_id)
+    unidade = Unidade.query.get(inquilino.unidade_id)
+    
+    dados = {
+        'id': inquilino.id,
+        'nome': inquilino.nome,
+        'cpf': inquilino.cpf,
+        'unidade_id': inquilino.unidade_id,
+        'unidade': {
+            'id': unidade.id,
+            'nome': unidade.nome,
+            'local_id': unidade.local_id
+        } if unidade else None
+    }
+    return jsonify(dados)
+
 # Cadastrar inquilino
 @app.route('/cadastrar_inquilino', methods=['GET', 'POST'])
 def cadastrar_inquilino():
@@ -418,6 +445,7 @@ def cadastrar_contrato():
         taxa_condominio = request.form.get('taxa_condominio', type=float) or 0.0
         taxa_iptu = request.form.get('taxa_iptu', type=float) or 0.0
         taxa_assinatura = request.form.get('taxa_assinatura', type=float) or 0.0
+        valor_caucao = request.form.get('valor_caucao', type=float) or 0.0
 
         # Validações
         if not all([local_id, unidade_id, inquilino_id, valor_aluguel, data_inicio, dia_vencimento, situacao]):

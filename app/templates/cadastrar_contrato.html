@@ -57,6 +57,29 @@
             border-radius: 6px;
             display: none; /* escondido por padrão */
         }
+        
+        /* Caução automática */
+        .caucao-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .caucao-info strong {
+            color: #1976d2;
+        }
+        
+        /* Status das unidades */
+        .unidade-status {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 4px;
+        }
+        .status-disponivel { color: #4caf50; }
+        .status-ocupada { color: #f44336; }
+        .status-manutencao { color: #ff9800; }
     </style>
     <script>
         function filtrarUnidades() {
@@ -64,15 +87,66 @@
             var unidadeSelect = document.getElementById('unidade_id');
             unidadeSelect.innerHTML = '<option value="">Selecione a Unidade</option>';
             if(local_id) {
-                fetch('/api/unidades/' + local_id)
+                fetch('/api/unidades_disponiveis/' + local_id)
                 .then(response => response.json())
                 .then(data => {
                     data.forEach(function(unidade) {
                         var option = document.createElement('option');
                         option.value = unidade.id;
                         option.text = unidade.nome;
+                        // Adicionar status da unidade
+                        var statusText = '';
+                        if (unidade.status === 'disponivel') {
+                            statusText = ' (Disponível)';
+                        } else if (unidade.status === 'ocupada') {
+                            statusText = ' (Ocupada)';
+                        } else if (unidade.status === 'manutencao') {
+                            statusText = ' (Manutenção)';
+                        }
+                        option.text += statusText;
                         unidadeSelect.appendChild(option);
                     });
+                });
+            }
+        }
+
+        function calcularCaucao() {
+            var valorAluguel = parseFloat(document.getElementById('valor_aluguel').value) || 0;
+            var taxaCondominio = parseFloat(document.getElementById('taxa_condominio').value) || 0;
+            var caucao = valorAluguel + taxaCondominio;
+            
+            document.getElementById('valor_caucao').value = caucao.toFixed(2);
+            
+            // Mostrar informação da caução
+            var caucaoInfo = document.getElementById('caucao-info');
+            if (caucao > 0) {
+                caucaoInfo.innerHTML = `
+                    <strong>💡 Caução Calculada Automaticamente:</strong><br>
+                    Aluguel: R$ ${valorAluguel.toFixed(2)} + Condomínio: R$ ${taxaCondominio.toFixed(2)} = 
+                    <strong>R$ ${caucao.toFixed(2)}</strong>
+                `;
+                caucaoInfo.style.display = 'block';
+            } else {
+                caucaoInfo.style.display = 'none';
+            }
+        }
+
+        function preencherDadosInquilino() {
+            var inquilinoId = document.getElementById('inquilino_id').value;
+            if (inquilinoId) {
+                fetch('/api/inquilino/' + inquilinoId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.unidade) {
+                        // Preencher local e unidade automaticamente
+                        document.getElementById('local_id').value = data.unidade.local_id;
+                        filtrarUnidades();
+                        
+                        // Aguardar carregar unidades e então selecionar
+                        setTimeout(function() {
+                            document.getElementById('unidade_id').value = data.unidade_id;
+                        }, 500);
+                    }
                 });
             }
         }
@@ -108,12 +182,19 @@
                 });
             });
             
+            // Adicionar listeners para cálculo automático da caução
+            document.getElementById('valor_aluguel').addEventListener('input', calcularCaucao);
+            document.getElementById('taxa_condominio').addEventListener('input', calcularCaucao);
+            
+            // Adicionar listener para preenchimento automático
+            document.getElementById('inquilino_id').addEventListener('change', preencherDadosInquilino);
+            
             // Carregar unidades se há dados mantidos
             {% if dados_form and dados_form.local_id %}
                 var localSelect = document.getElementById('local_id');
                 var unidadeSelect = document.getElementById('unidade_id');
                 if (localSelect.value) {
-                    fetch('/api/unidades/' + localSelect.value)
+                    fetch('/api/unidades_disponiveis/' + localSelect.value)
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(function(unidade) {
@@ -145,6 +226,25 @@
         {% endwith %}
         
         <form method="POST">
+            <!-- Seção: Inquilino (Primeiro para auto-preenchimento) -->
+            <div class="form-section">
+                <h3>👤 Selecionar Inquilino</h3>
+                <div class="row">
+                    <div>
+                        <label for="inquilino_id">Inquilino:</label>
+                        <select name="inquilino_id" id="inquilino_id" required>
+                            <option value="">Selecione o Inquilino</option>
+                            {% for inq in inquilinos %}
+                                <option value="{{ inq.id }}" {% if dados_form and dados_form.inquilino_id|string == inq.id|string %}selected{% endif %}>
+                                    {{ inq.nome }} - {{ inq.cpf }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small style="color: #666;">💡 Ao selecionar o inquilino, o local e unidade serão preenchidos automaticamente</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- Seção: Local e Unidade -->
             <div class="form-section">
                 <h3>🏢 Local e Unidade</h3>
@@ -166,38 +266,39 @@
                                 <option value="{{ dados_form.unidade_id }}" selected>Unidade selecionada</option>
                             {% endif %}
                         </select>
+                        <small style="color: #666;">💡 Apenas unidades disponíveis serão mostradas</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Seção: Inquilino e Valores -->
+            <!-- Seção: Valores -->
             <div class="form-section">
-                <h3>👤 Inquilino e Valores</h3>
+                <h3>💰 Valores</h3>
                 <div class="row">
-                    <div>
-                        <label for="inquilino_id">Inquilino:</label>
-                        <select name="inquilino_id" id="inquilino_id" required>
-                            <option value="">Selecione o Inquilino</option>
-                            {% for inq in inquilinos %}
-                                <option value="{{ inq.id }}" {% if dados_form and dados_form.inquilino_id|string == inq.id|string %}selected{% endif %}>{{ inq.nome }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
                     <div>
                         <label for="valor_aluguel">Valor do Aluguel (R$):</label>
-                        <input type="number" step="0.01" name="valor_aluguel" required placeholder="0,00" value="{{ dados_form.valor_aluguel if dados_form else '' }}">
+                        <input type="number" step="0.01" name="valor_aluguel" id="valor_aluguel" required placeholder="0,00" value="{{ dados_form.valor_aluguel if dados_form else '' }}">
+                    </div>
+                    <div>
+                        <label for="taxa_condominio">Taxa de Condomínio (R$):</label>
+                        <input type="number" step="0.01" name="taxa_condominio" id="taxa_condominio" placeholder="0,00" value="{{ dados_form.taxa_condominio if dados_form else '' }}">
+                    </div>
+                </div>
+                
+                <!-- Caução Automática -->
+                <div class="row">
+                    <div>
+                        <label for="valor_caucao">Caução (R$):</label>
+                        <input type="number" step="0.01" name="valor_caucao" id="valor_caucao" readonly placeholder="Calculado automaticamente" value="{{ dados_form.valor_caucao if dados_form else '' }}">
+                        <div id="caucao-info" class="caucao-info" style="display: none;"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Seção: Taxas e Encargos -->
+            <!-- Seção: Taxas Adicionais -->
             <div class="form-section">
-                <h3>💰 Taxas e Encargos</h3>
+                <h3>📋 Taxas Adicionais</h3>
                 <div class="row">
-                    <div>
-                        <label for="taxa_condominio">Taxa de Condomínio (R$):</label>
-                        <input type="number" step="0.01" name="taxa_condominio" placeholder="0,00" value="{{ dados_form.taxa_condominio if dados_form else '' }}">
-                    </div>
                     <div>
                         <label for="taxa_iptu">IPTU Trimestral (R$):</label>
                         <input type="number" step="0.01" name="taxa_iptu" placeholder="0,00" value="{{ dados_form.taxa_iptu if dados_form else '' }}">
@@ -283,3 +384,4 @@
     </div>
 </body>
 </html>
+

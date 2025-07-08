@@ -60,6 +60,7 @@ class Contrato(db.Model):
     inquilino_id = db.Column(db.Integer, db.ForeignKey('inquilino.id'), nullable=False)
     unidade_id = db.Column(db.Integer, db.ForeignKey('unidade.id'), nullable=False)
     valor_aluguel = db.Column(db.Float, nullable=False)
+    valor_caucao = db.Column(db.Float, nullable=True)  # Caução (aluguel + condomínio)
     data_inicio = db.Column(db.Date, nullable=False)
     data_fim = db.Column(db.Date, nullable=True)
     dia_vencimento = db.Column(db.String(2), nullable=False)  # Usar string para evitar erro com zeros à esquerda
@@ -81,6 +82,12 @@ class Contrato(db.Model):
     data_envio_assinatura = db.Column(db.DateTime, nullable=True)
     data_assinatura = db.Column(db.DateTime, nullable=True)
     boletos = db.relationship('Boleto', backref='contrato', lazy=True)
+    
+    def calcular_caucao(self):
+        """Calcula automaticamente o valor da caução"""
+        if self.valor_aluguel and self.taxa_condominio:
+            return self.valor_aluguel + self.taxa_condominio
+        return self.valor_aluguel or 0
 
 class Boleto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
