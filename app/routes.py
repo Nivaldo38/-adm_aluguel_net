@@ -14,6 +14,7 @@ from app.backup_service import BackupService
 from app.notification_service import notification_service
 from app.d4sign_service import d4sign_service
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.historico_service import HistoricoService
 
 # Instanciar o serviço de backup (será criado quando necessário)
 
@@ -1677,3 +1678,166 @@ def executar_verificacoes():
         flash(f'Erro ao executar verificações: {e}', 'danger')
     
     return redirect(url_for('notificacoes_page'))
+
+# ===== ROTAS PARA RELATÓRIOS =====
+
+# Relatórios financeiros
+@app.route('/relatorios')
+def relatorios():
+    # Estatísticas gerais
+    total_contratos = Contrato.query.count()
+    contratos_ativos = Contrato.query.filter_by(situacao='Ativo').count()
+    total_receita = db.session.query(db.func.sum(Contrato.valor_aluguel)).filter_by(situacao='Ativo').scalar() or 0
+    
+    # Receita por mês (últimos 12 meses)
+    from datetime import datetime, timedelta
+    hoje = datetime.now()
+    receita_mensal = []
+    
+    for i in range(12):
+        data = hoje - timedelta(days=30*i)
+        mes = data.strftime('%Y-%m')
+        receita = db.session.query(db.func.sum(Contrato.valor_aluguel)).filter(
+            Contrato.situacao == 'Ativo',
+            db.func.strftime('%Y-%m', Contrato.data_inicio) == mes
+        ).scalar() or 0
+        receita_mensal.append({
+            'mes': data.strftime('%B/%Y'),
+            'valor': receita
+        })
+    
+    # Top locais por receita
+    top_locais = db.session.query(
+        Local.nome,
+        db.func.sum(Contrato.valor_aluguel).label('total_receita'),
+        db.func.count(Contrato.id).label('total_contratos')
+    ).join(Unidade).join(Contrato).filter(
+        Contrato.situacao == 'Ativo'
+    ).group_by(Local.id).order_by(
+        db.func.sum(Contrato.valor_aluguel).desc()
+    ).limit(5).all()
+    
+    # Boletos pendentes
+    boletos_pendentes = Boleto.query.filter_by(status='pendente').count()
+    valor_pendente = db.session.query(db.func.sum(Boleto.valor_total)).filter_by(status='pendente').scalar() or 0
+    
+    return render_template('relatorios.html',
+                         total_contratos=total_contratos,
+                         contratos_ativos=contratos_ativos,
+                         total_receita=total_receita,
+                         receita_mensal=receita_mensal,
+                         top_locais=top_locais,
+                         boletos_pendentes=boletos_pendentes,
+                         valor_pendente=valor_pendente)
+
+# Exportar relatório para Excel
+@app.route('/exportar_relatorio/<tipo>')
+def exportar_relatorio(tipo):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill
+    import io
+    
+    wb = Workbook()
+    ws = wb.active
+    
+    if tipo == 'contratos':
+        ws.title = "Contratos"
+        ws.append(['Inquilino', 'Local', 'Unidade', 'Valor', 'Status', 'Início', 'Fim'])
+        
+        contratos = Contrato.query.all()
+        for contrato in contratos:
+            ws.append([
+                contrato.inquilino.nome,
+                contrato.unidade.local.nome,
+                contrato.unidade.nome,
+                contrato.valor_aluguel,
+                contrato.situacao,
+                contrato.data_inicio.strftime('%d/%m/%Y'),
+                contrato.data_fim.strftime('%d/%m/%Y') if contrato.data_fim else '-'
+            ])
+    
+    elif tipo == 'boletos':
+        ws.title = "Boletos"
+        ws.append(['Inquilino', 'Mês Referência', 'Valor', 'Vencimento', 'Status'])
+        
+        boletos = Boleto.query.all()
+        for boleto in boletos:
+            ws.append([
+                boleto.contrato.inquilino.nome,
+                boleto.mes_referencia,
+                boleto.valor_total,
+                boleto.data_vencimento.strftime('%d/%m/%Y'),
+                boleto.status
+            ])
+    
+    # Salvar em buffer
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f'relatorio_{tipo}_{datetime.now().strftime("%Y%m%d")}.xlsx',
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+# ===== ROTAS PARA HISTÓRICO =====
+
+# Visualizar histórico
+@app.route('/historico')
+def historico():
+    # Filtros
+    tabela = request.args.get('tabela', '')
+    tipo = request.args.get('tipo', '')
+    registro_id = request.args.get('registro_id', type=int)
+    
+    # Obter histórico
+    historico = HistoricoService.obter_historico(
+        tabela=tabela if tabela else None,
+        tipo_alteracao=tipo if tipo else None,
+        registro_id=registro_id
+    )
+    
+    # Estatísticas
+    total_registros = len(historico)
+    criacoes = len([h for h in historico if h.tipo_alteracao == 'criado'])
+    edicoes = len([h for h in historico if h.tipo_alteracao == 'editado'])
+    exclusoes = len([h for h in historico if h.tipo_alteracao == 'excluido'])
+    
+    return render_template('historico.html',
+                         historico=historico,
+                         total_registros=total_registros,
+                         criacoes=criacoes,
+                         edicoes=edicoes,
+                         exclusoes=exclusoes,
+                         filtros={'tabela': tabela, 'tipo': tipo, 'registro_id': registro_id})
+
+# Histórico de um contrato específico
+@app.route('/historico/contrato/<int:contrato_id>')
+def historico_contrato(contrato_id):
+    historico = HistoricoService.obter_historico_contrato(contrato_id)
+    contrato = Contrato.query.get_or_404(contrato_id)
+    
+    return render_template('historico_contrato.html',
+                         historico=historico,
+                         contrato=contrato)
+
+# Histórico de um inquilino específico
+@app.route('/historico/inquilino/<int:inquilino_id>')
+def historico_inquilino(inquilino_id):
+    historico = HistoricoService.obter_historico_inquilino(inquilino_id)
+    inquilino = Inquilino.query.get_or_404(inquilino_id)
+    
+    return render_template('historico_inquilino.html',
+                         historico=historico,
+                         inquilino=inquilino)
+
+# Limpar histórico antigo
+@app.route('/limpar_historico', methods=['POST'])
+def limpar_historico():
+    dias = request.form.get('dias', 90, type=int)
+    registros_removidos = HistoricoService.limpar_historico_antigo(dias)
+    
+    flash(f'Removidos {registros_removidos} registros de histórico com mais de {dias} dias.', 'success')
+    return redirect(url_for('historico'))

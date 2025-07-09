@@ -1,0 +1,182 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Relatórios - Sistema de Administração de Aluguel{% endblock %}
+
+{% block page_title %}Relatórios Financeiros{% endblock %}
+
+{% block content %}
+<div class="space-y-6 animate-fade-in">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatórios Financeiros</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">Análise completa da performance financeira</p>
+        </div>
+        <div class="mt-4 sm:mt-0 space-x-2">
+            <a href="{{ url_for('exportar_relatorio', tipo='contratos') }}" 
+               class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-all duration-200">
+                <i class="fas fa-file-excel mr-2"></i>
+                Exportar Contratos
+            </a>
+            <a href="{{ url_for('exportar_relatorio', tipo='boletos') }}" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200">
+                <i class="fas fa-file-excel mr-2"></i>
+                Exportar Boletos
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-file-contract text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Contratos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_contratos }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Contratos Ativos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ contratos_ativos }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-dollar-sign text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Receita Mensal</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ "%.2f"|format(total_receita) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pendente</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">R$ {{ "%.2f"|format(valor_pendente) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Receita Mensal Chart -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receita Mensal (Últimos 12 meses)</h3>
+            <div class="space-y-3">
+                {% for item in receita_mensal %}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600 dark:text-gray-400">{{ item.mes }}</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ (item.valor / total_receita * 100) if total_receita > 0 else 0 }}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">R$ {{ "%.2f"|format(item.valor) }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Top Locais -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Locais por Receita</h3>
+            <div class="space-y-4">
+                {% for local in top_locais %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div>
+                        <h4 class="font-medium text-gray-900 dark:text-white">{{ local.nome }}</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ local.total_contratos }} contratos</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-bold text-green-600 dark:text-green-400">R$ {{ "%.2f"|format(local.total_receita) }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Boletos Pendentes -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Boletos Pendentes</h3>
+            <span class="text-2xl font-bold text-red-600 dark:text-red-400">{{ boletos_pendentes }}</span>
+        </div>
+        <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 mr-3"></i>
+                <div>
+                    <p class="text-red-800 dark:text-red-200 font-medium">Valor Total Pendente: R$ {{ "%.2f"|format(valor_pendente) }}</p>
+                    <p class="text-red-600 dark:text-red-300 text-sm">Acompanhe os pagamentos pendentes na seção de boletos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ações Rápidas</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{{ url_for('listar_contratos') }}" 
+               class="flex items-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200">
+                <i class="fas fa-file-contract text-blue-600 dark:text-blue-400 mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900 dark:text-white">Ver Contratos</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Gerenciar contratos</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('listar_boletos') }}" 
+               class="flex items-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors duration-200">
+                <i class="fas fa-barcode text-green-600 dark:text-green-400 mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900 dark:text-white">Ver Boletos</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Gerenciar boletos</p>
+                </div>
+            </a>
+            
+            <a href="{{ url_for('dashboard_avancado') }}" 
+               class="flex items-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors duration-200">
+                <i class="fas fa-chart-line text-purple-600 dark:text-purple-400 mr-3"></i>
+                <div>
+                    <p class="font-medium text-gray-900 dark:text-white">Dashboard</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Visão geral</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar animações aos cards
+    const cards = document.querySelectorAll('.bg-white, .bg-gray-800');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-fade-in');
+    });
+});
+</script>
+{% endblock %} 

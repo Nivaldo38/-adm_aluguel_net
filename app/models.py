@@ -107,3 +107,19 @@ class Boleto(db.Model):
     
     def __repr__(self):
         return f'<Boleto {self.mes_referencia} - R$ {self.valor_total:.2f}>'
+
+# Histórico de alterações
+class HistoricoAlteracao(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    tabela = db.Column(db.String(50), nullable=False)  # 'contrato', 'inquilino', 'boleto', etc.
+    registro_id = db.Column(db.Integer, nullable=False)  # ID do registro alterado
+    tipo_alteracao = db.Column(db.String(20), nullable=False)  # 'criado', 'editado', 'excluido'
+    campo_alterado = db.Column(db.String(100), nullable=True)  # Nome do campo alterado
+    valor_anterior = db.Column(db.Text, nullable=True)  # Valor anterior
+    valor_novo = db.Column(db.Text, nullable=True)  # Novo valor
+    data_alteracao = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    usuario = db.Column(db.String(100), nullable=False, default='Sistema')  # Quem fez a alteração
+    observacao = db.Column(db.Text, nullable=True)  # Observação adicional
+    
+    def __repr__(self):
+        return f'<HistoricoAlteracao {self.tabela}:{self.registro_id} - {self.tipo_alteracao}>'
