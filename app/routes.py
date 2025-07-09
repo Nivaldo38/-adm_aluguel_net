@@ -659,15 +659,15 @@ def cadastrar_contrato():
 @app.route('/listar_contratos')
 def listar_contratos():
     locais = Local.query.all()
-    local_id = request.args.get('local_id', type=int)
+    local_filter = request.args.get('local', '')
     situacao = request.args.get('situacao', '')
     
     # Query base
     query = Contrato.query
     
     # Aplicar filtros
-    if local_id:
-        query = query.join(Unidade).filter(Unidade.local_id == local_id)
+    if local_filter:
+        query = query.join(Unidade).join(Local).filter(Local.nome == local_filter)
     
     if situacao:
         query = query.filter(Contrato.situacao == situacao)
@@ -677,12 +677,14 @@ def listar_contratos():
     
     # Calcular estatísticas
     total_contratos = len(contratos)
-    contratos_ativos = len([c for c in contratos if c.situacao == 'ativo'])
-    contratos_vencidos = len([c for c in contratos if c.situacao == 'vencido'])
-    contratos_rescindidos = len([c for c in contratos if c.situacao == 'rescindido'])
+    contratos_ativos = len([c for c in contratos if c.situacao == 'Ativo'])
+    contratos_pendentes = len([c for c in contratos if c.situacao == 'Pendente'])
+    contratos_vencidos = len([c for c in contratos if c.situacao == 'Vencido'])
     
     return render_template('listar_contratos.html', 
-                         contratos=contratos)
+                         contratos=contratos,
+                         locais=locais,
+                         local_filter=local_filter)
 
 # Editar contrato
 @app.route('/editar_contrato/<int:contrato_id>', methods=['GET', 'POST'])
