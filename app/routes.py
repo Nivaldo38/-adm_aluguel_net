@@ -1713,7 +1713,7 @@ def relatorios():
         Local.nome,
         db.func.sum(Contrato.valor_aluguel).label('total_receita'),
         db.func.count(Contrato.id).label('total_contratos')
-    ).join(Unidade).join(Contrato).filter(
+    ).select_from(Local).join(Unidade).join(Contrato).filter(
         Contrato.situacao == 'Ativo'
     ).group_by(Local.id).order_by(
         db.func.sum(Contrato.valor_aluguel).desc()
