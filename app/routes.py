@@ -1720,8 +1720,8 @@ def relatorios():
     ).limit(5).all()
     
     # Boletos pendentes
-    boletos_pendentes = Boleto.query.filter_by(status='pendente').count()
-    valor_pendente = db.session.query(db.func.sum(Boleto.valor_total)).filter_by(status='pendente').scalar() or 0
+    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
+    valor_pendente = db.session.query(db.func.sum(Boleto.valor_total)).filter_by(status='Pendente').scalar() or 0
     
     return render_template('relatorios.html',
                          total_contratos=total_contratos,
@@ -1916,7 +1916,7 @@ def dashboard_avancado():
         boletos_vencendo.append({
             'inquilino': boleto.contrato.inquilino.nome,
             'local': f"{boleto.contrato.unidade.local.nome} - {boleto.contrato.unidade.nome}",
-            'valor': boleto.valor,
+            'valor': boleto.valor_total,
             'dias_vencimento': dias_vencimento
         })
     
