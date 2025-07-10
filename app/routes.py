@@ -7,7 +7,7 @@ import os
 import secrets
 import string
 import json
-# # # from app.contract_generator import ContractGenerator  # Removido  # Arquivo removido
+# # # # # from app.contract_generator import ContractGenerator  # Removido  # Removido  # Removido  # Arquivo removido
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
 from app.backup_service import BackupService
@@ -629,7 +629,7 @@ def cadastrar_contrato():
             
             # Gerar contrato automaticamente
             try:
-                from app.contract_generator import ContractGenerator
+                # # from app.contract_generator import ContractGenerator  # Removido  # Removido
                 generator = ContractGenerator()
                 
                 # Gerar PDF do contrato
@@ -960,7 +960,7 @@ def visualizar_contrato(contrato_id):
 def regenerar_contrato(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
     try:
-        from app.contract_generator import ContractGenerator
+        # # from app.contract_generator import ContractGenerator  # Removido  # Removido
         generator = ContractGenerator()
         
         # Gerar PDF do contrato
@@ -1580,8 +1580,8 @@ def dashboard_basico():
     ).group_by(Contrato.situacao).all()
     
     # Boletos pendentes
-    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
-    boletos_vencidos = Boleto.query.filter_by(status='vencido').count()
+    boletos_pendentes = Boleto.query.filter_by(situacao='Pendente').count()
+    boletos_vencidos = Boleto.query.filter_by(situacao='vencido').count()
     
     # Contratos vencendo nos próximos 30 dias
     contratos_vencendo = Contrato.query.filter(
@@ -1720,8 +1720,8 @@ def relatorios():
     ).limit(5).all()
     
     # Boletos pendentes
-    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
-    valor_pendente = db.session.query(db.func.sum(Boleto.valor_total)).filter_by(status='Pendente').scalar() or 0
+    boletos_pendentes = Boleto.query.filter_by(situacao='Pendente').count()
+    valor_pendente = db.session.query(db.func.sum(Boleto.valor_total)).filter_by(situacao='Pendente').scalar() or 0
     
     return render_template('relatorios.html',
                          total_contratos=total_contratos,
@@ -1858,7 +1858,7 @@ def dashboard_avancado():
     # Cálculos financeiros
     receita_total = sum(c.valor_aluguel for c in contratos if c.situacao == 'Ativo')
     contratos_ativos = Contrato.query.filter_by(situacao='Ativo').count()
-    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
+    boletos_pendentes = Boleto.query.filter_by(situacao='Pendente').count()
     valor_pendente = sum(b.valor_total for b in boletos if b.status == 'Pendente')
     
     # Taxa de ocupação

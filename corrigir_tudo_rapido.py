@@ -27,14 +27,19 @@ alembic==1.13.1
 python-dotenv==1.0.0
 gunicorn==21.2.0"""
     
-    with open('requirements.txt', 'w') as f:
+    with open('requirements.txt', 'w', encoding='utf-8') as f:
         f.write(requirements)
     print("✅ Requirements.txt corrigido")
 
 def corrigir_routes():
     """Corrige routes.py"""
-    with open('app/routes.py', 'r') as f:
-        content = f.read()
+    try:
+        with open('app/routes.py', 'r', encoding='utf-8') as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        # Tenta com encoding diferente se UTF-8 falhar
+        with open('app/routes.py', 'r', encoding='latin-1') as f:
+            content = f.read()
     
     # Remove imports problemáticos
     content = content.replace('from app.contract_generator import ContractGenerator', '# from app.contract_generator import ContractGenerator  # Removido')
@@ -45,20 +50,24 @@ def corrigir_routes():
     content = content.replace('.filter_by(status=', '.filter_by(situacao=')
     content = content.replace('.data_criacao', '.id')
     
-    with open('app/routes.py', 'w') as f:
+    with open('app/routes.py', 'w', encoding='utf-8') as f:
         f.write(content)
     print("✅ Routes.py corrigido")
 
 def corrigir_templates():
     """Corrige templates"""
     # Corrige base_modern.html
-    with open('app/templates/base_modern.html', 'r') as f:
-        content = f.read()
+    try:
+        with open('app/templates/base_modern.html', 'r', encoding='utf-8') as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        with open('app/templates/base_modern.html', 'r', encoding='latin-1') as f:
+            content = f.read()
     
     content = content.replace('backup_management', 'backup_page')
     content = content.replace('email_notifications', 'index')
     
-    with open('app/templates/base_modern.html', 'w') as f:
+    with open('app/templates/base_modern.html', 'w', encoding='utf-8') as f:
         f.write(content)
     print("✅ Templates corrigidos")
 
