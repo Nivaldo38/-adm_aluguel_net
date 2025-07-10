@@ -1,121 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestão de Boletos</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f4f8fb; }
-        .container { max-width: 1200px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 24px #0002; padding: 38px; }
-        h1 { color: #1976d2; text-align: center; margin-bottom: 24px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        th, td { padding: 10px 7px; border-bottom: 1px solid #e3e3e3; text-align: left; }
-        th { background: #f3f6fa; color: #1976d2; }
-        tr:hover { background: #f6fbff; }
-        .btn-new { background: #1976d2; color: #fff; margin-bottom: 14px; text-decoration: none; display: inline-block; padding: 8px 24px; border-radius: 6px; }
-        .filter-form { margin-bottom: 14px; }
-        .back { margin-top: 16px; display: block; }
-        a.action-btn {
-            margin-right: 8px;
-            text-decoration: none;
-            padding: 5px 12px;
-            border-radius: 4px;
-            color: white;
-            font-weight: bold;
-            display: inline-block;
-        }
-        a.edit-btn { background-color: #f0ad4e; }
-        a.delete-btn { background-color: #d9534f; }
-        a.pay-btn { background-color: #5cb85c; }
-        a.cancel-btn { background-color: #6c757d; }
-        a.edit-btn:hover { background-color: #ec971f; }
-        a.delete-btn:hover { background-color: #c9302c; }
-        a.pay-btn:hover { background-color: #4cae4c; }
-        a.cancel-btn:hover { background-color: #5a6268; }
-        
-        /* Alertas */
-        .alert {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .alert-info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        
-        /* Status badges */
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .status-pendente { background: #fff3cd; color: #856404; }
-        .status-pago { background: #d4edda; color: #155724; }
-        .status-vencido { background: #f8d7da; color: #721c24; }
-        .status-cancelado { background: #e2e3e5; color: #383d41; }
-        
-        /* Melhorias na tabela */
-        .table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-        .stats-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .stat-item {
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #1976d2;
-        }
-        .stat-label {
-            font-size: 0.9em;
-            color: #666;
-        }
-        
-        /* Botões de ação */
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-    </style>
-    <script>
-        // Auto-limpar mensagens flash após 5 segundos
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                alert.style.opacity = '0';
-                setTimeout(function() {
-                    alert.remove();
-                }, 500);
-            });
-        }, 5000);
+{% extends "base_modern.html" %}
 
-        // Destacar boletos vencidos
-        document.addEventListener('DOMContentLoaded', function() {
-            var rows = document.querySelectorAll('tr');
-            rows.forEach(function(row) {
-                var statusCell = row.querySelector('.status-vencido');
-                if (statusCell) {
-                    row.style.backgroundColor = '#fff3cd';
-                }
-            });
-        });
-    </script>
-</head>
-<body>
-    <div class="container">
+{% block title %}Gestão de Boletos - Sistema de Aluguel{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-6">💰 Gestão de Boletos</h1>
         <h1>💰 Gestão de Boletos</h1>
         
         <!-- Mensagens Flash -->
@@ -241,11 +131,37 @@
         </div>
         
         {% if not boletos %}
-        <div style="text-align: center; padding: 40px; color: #666;">
-            <h3>📭 Nenhum boleto encontrado</h3>
+        <div class="text-center py-10 text-gray-500">
+            <h3 class="text-xl font-semibold mb-2">📭 Nenhum boleto encontrado</h3>
             <p>Gere boletos para os contratos ativos para começar.</p>
         </div>
         {% endif %}
     </div>
-</body>
-</html> 
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-limpar mensagens flash após 5 segundos
+    setTimeout(function() {
+        var alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.remove();
+            }, 500);
+        });
+    }, 5000);
+
+    // Destacar boletos vencidos
+    document.addEventListener('DOMContentLoaded', function() {
+        var rows = document.querySelectorAll('tr');
+        rows.forEach(function(row) {
+            var statusCell = row.querySelector('.status-vencido');
+            if (statusCell) {
+                row.style.backgroundColor = '#fff3cd';
+            }
+        });
+    });
+</script>
+{% endblock %} 
