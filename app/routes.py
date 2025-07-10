@@ -755,7 +755,7 @@ def listar_boletos():
     # Atualizar status de boletos vencidos
     hoje = datetime.now().date()
     boletos_vencidos = Boleto.query.filter(
-        Boleto.status == 'pendente',
+        Boleto.status == 'Pendente',
         Boleto.data_vencimento < hoje
     ).all()
     
@@ -777,7 +777,7 @@ def listar_boletos():
     
     # Estatísticas
     total_boletos = len(boletos)
-    boletos_pendentes = len([b for b in boletos if b.status == 'pendente'])
+    boletos_pendentes = len([b for b in boletos if b.status == 'Pendente'])
     boletos_pagos = len([b for b in boletos if b.status == 'pago'])
     boletos_vencidos = len([b for b in boletos if b.status == 'vencido'])
     
@@ -1314,8 +1314,8 @@ def inquilino_dashboard():
     debitos = 0
     if contrato and boletos:
         for boleto in boletos:
-            if boleto.status == 'pendente' and boleto.data_vencimento < datetime.now().date():
-                debitos += boleto.valor
+            if boleto.status == 'Pendente' and boleto.data_vencimento < datetime.now().date():
+                debitos += boleto.valor_total
     
     return render_template('inquilino/dashboard.html', 
                          inquilino=inquilino, 
@@ -1580,7 +1580,7 @@ def dashboard_basico():
     ).group_by(Contrato.situacao).all()
     
     # Boletos pendentes
-    boletos_pendentes = Boleto.query.filter_by(status='pendente').count()
+    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
     boletos_vencidos = Boleto.query.filter_by(status='vencido').count()
     
     # Contratos vencendo nos próximos 30 dias
@@ -1859,7 +1859,7 @@ def dashboard_avancado():
     receita_total = sum(c.valor_aluguel for c in contratos if c.situacao == 'Ativo')
     contratos_ativos = Contrato.query.filter_by(situacao='Ativo').count()
     boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
-    valor_pendente = sum(b.valor for b in boletos if b.status == 'Pendente')
+    valor_pendente = sum(b.valor_total for b in boletos if b.status == 'Pendente')
     
     # Taxa de ocupação
     total_unidades = len(unidades)

@@ -27,7 +27,7 @@ class NotificationService:
         tres_dias = hoje + timedelta(days=3)
         
         boletos_vencendo = Boleto.query.filter(
-            Boleto.status == 'pendente',
+            Boleto.status == 'Pendente',
             Boleto.data_vencimento >= hoje,
             Boleto.data_vencimento <= tres_dias
         ).all()

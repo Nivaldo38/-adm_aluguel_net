@@ -280,8 +280,8 @@ class EmailService:
         
         total_boletos = len(boletos_mes)
         boletos_pagos = len([b for b in boletos_mes if b.status == 'pago'])
-        valor_total = sum(b.valor for b in boletos_mes)
-        valor_pago = sum(b.valor for b in boletos_mes if b.status == 'pago')
+        valor_total = sum(b.valor_total for b in boletos_mes)
+        valor_pago = sum(b.valor_total for b in boletos_mes if b.status == 'pago')
         
         body = f"""
         Olá {contrato.inquilino.nome},
