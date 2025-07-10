@@ -8,5 +8,25 @@
       "size_mb": 0.06925010681152344,
       "hash": "0e5403962c0eba39e5f0647f600e369d030a8805d9958f249955491a32577b36"
     }
+  },
+  {
+    "operation": "create",
+    "file": "backup_20250709_204025.zip",
+    "timestamp": "2025-07-09T20:40:25.214939",
+    "info": {
+      "timestamp": "2025-07-09T20:40:25.162317",
+      "size_mb": 0.06925010681152344,
+      "hash": "92fe417ddbb725add12e979138ceb096c4758e056053665ffa62b65884b9913b"
+    }
+  },
+  {
+    "operation": "create",
+    "file": "backup_20250709_210248.zip",
+    "timestamp": "2025-07-09T21:02:48.395968",
+    "info": {
+      "timestamp": "2025-07-09T21:02:48.352773",
+      "size_mb": 0.06925010681152344,
+      "hash": "c450d03285c583ddfeffb3f56d6ceeece62258355cc47d4ea6e7ac00b696d22b"
+    }
   }
 ]

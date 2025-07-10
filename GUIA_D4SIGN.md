@@ -1,167 +1,309 @@
-# Guia de Configuração e Uso do D4Sign
+# 🖋️ Guia Completo - Integração D4Sign
 
 ## 📋 Visão Geral
 
-Este guia explica como configurar e usar o sistema de assinatura digital D4Sign no sistema de administração de aluguel.
+Este guia explica como configurar e usar a integração com o D4Sign para assinatura digital de contratos no sistema de administração de aluguel.
 
-## 🔧 Configuração das Variáveis de Ambiente
+## 🔧 Configuração Inicial
 
-### 1. Obter Credenciais do D4Sign
+### 1. Criar Conta D4Sign
 
-1. Acesse [https://www.d4sign.com.br](https://www.d4sign.com.br)
-2. Crie uma conta ou faça login
-3. Vá para "Configurações" > "API"
-4. Copie suas credenciais:
-   - **API Token**: Token de acesso à API
-   - **Safe Key**: Chave de segurança
+**Para Desenvolvimento (Sandbox):**
+- Acesse: https://sandbox.d4sign.com.br/criar.html
+- Crie uma conta gratuita
+- Não possui validade jurídica
 
-### 2. Configurar Variáveis de Ambiente
+**Para Produção:**
+- Acesse: https://secure.d4sign.com.br/criar.html
+- Crie uma conta paga
+- Possui validade jurídica completa
 
-#### Para Desenvolvimento Local:
+### 2. Obter Credenciais de API
+
+1. Faça login na sua conta D4Sign
+2. Acesse o menu **'Dev API'**
+3. Copie sua **Chave de API (tokenAPI)**
+4. Se o **cryptKey** estiver habilitado, copie também
+
+### 3. Configurar Variáveis de Ambiente
+
 Crie um arquivo `.env` na raiz do projeto:
 
-```env
-# Configurações D4Sign
-D4SIGN_API_URL=https://api.d4sign.com.br
-D4SIGN_API_TOKEN=seu_token_aqui
-D4SIGN_SAFE_KEY=sua_safe_key_aqui
-
-# Configurações de Email (já existentes)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=seu_email@gmail.com
-EMAIL_PASSWORD=sua_senha_app
-```
-
-#### Para Deploy no Railway:
-1. Acesse o dashboard do Railway
-2. Vá para "Variables"
-3. Adicione as variáveis:
-   - `D4SIGN_API_URL`: `https://api.d4sign.com.br`
-   - `D4SIGN_API_TOKEN`: Seu token da API
-   - `D4SIGN_SAFE_KEY`: Sua safe key
-
-## 🚀 Como Usar o Sistema de Assinatura
-
-### 1. Enviar Contrato para Assinatura
-
-1. Acesse a lista de contratos
-2. Clique em "Enviar para Assinatura" no contrato desejado
-3. O sistema irá:
-   - Gerar o PDF do contrato
-   - Fazer upload para o D4Sign
-   - Criar um envelope de assinatura
-   - Enviar email para o inquilino
-
-### 2. Verificar Status da Assinatura
-
-1. Na lista de contratos, clique em "Verificar Status"
-2. O sistema consultará o D4Sign e atualizará o status
-
-### 3. Baixar Contrato Assinado
-
-1. Após a assinatura, clique em "Visualizar Contrato Assinado"
-2. O sistema baixará o PDF assinado do D4Sign
-
-## 📊 Status da Assinatura
-
-- **Não Enviado**: Contrato ainda não foi enviado para assinatura
-- **Enviado**: Contrato enviado, aguardando assinatura
-- **Assinado**: Contrato foi assinado pelo inquilino
-- **Cancelado**: Processo de assinatura foi cancelado
-
-## 🔄 Fluxo Completo
-
-### 1. Criação do Contrato
-```
-Cadastrar Contrato → Gerar PDF → Enviar para D4Sign → Email para Inquilino
-```
-
-### 2. Processo de Assinatura
-```
-Inquilino recebe email → Acessa link → Assina documento → D4Sign notifica sistema
-```
-
-### 3. Finalização
-```
-Sistema verifica status → Baixa PDF assinado → Salva no sistema
-```
-
-## 🛠️ Testando o Sistema
-
-### 1. Teste Local
 ```bash
-# Instalar dependências
-pip install -r requirements.txt
+# Ambiente (sandbox ou production)
+D4SIGN_ENVIRONMENT=sandbox
 
-# Configurar variáveis de ambiente
-# (criar arquivo .env)
-
-# Executar sistema
-python run.py
+# Credenciais de API (obrigatórias)
+D4SIGN_TOKEN_API=sua_chave_api_aqui
+D4SIGN_CRYPT_KEY=sua_crypt_key_aqui  # Opcional
 ```
 
-### 2. Teste de Assinatura
-1. Crie um contrato de teste
-2. Use o email `vanedijuliao@gmail.com` para assinatura
-3. Verifique se o email é recebido
-4. Teste o processo de assinatura
+## 🚀 Testando a Integração
+
+### 1. Teste Básico
+
+Execute o script de teste:
+
+```bash
+python testar_d4sign.py
+```
+
+Este script irá:
+- ✅ Verificar configuração
+- ✅ Testar conexão com API
+- ✅ Fazer upload de documento
+- ✅ Criar envelope de assinatura
+- ✅ Verificar status
+- ✅ Testar webhooks (opcional)
+
+### 2. Teste Manual
+
+1. Acesse o sistema: http://localhost:5000
+2. Crie um contrato
+3. Gere o PDF do contrato
+4. Clique em "Enviar para Assinatura"
+5. Verifique o status da assinatura
+
+## 📋 Funcionalidades Implementadas
+
+### 1. **Upload de Documentos**
+```python
+result = d4sign_service.upload_document(pdf_path)
+if result['success']:
+    doc_key = result['doc_key']
+```
+
+### 2. **Criação de Envelopes**
+```python
+result = d4sign_service.create_envelope(contrato, doc_key)
+if result['success']:
+    envelope_id = result['envelope_id']
+```
+
+### 3. **Verificação de Status**
+```python
+result = d4sign_service.get_envelope_status(envelope_id)
+status = result['status']  # enviado, assinado, cancelado, expirado
+```
+
+### 4. **Cancelamento de Assinatura**
+```python
+result = d4sign_service.cancel_envelope(envelope_id)
+```
+
+### 5. **Download de Documentos Assinados**
+```python
+result = d4sign_service.download_signed_document(envelope_id, output_path)
+```
+
+### 6. **Webhooks (Opcional)**
+```python
+result = d4sign_service.create_webhook(webhook_url)
+```
+
+### 7. **Embed D4Sign**
+```python
+result = d4sign_service.get_embed_url(envelope_id)
+embed_url = result['embed_url']  # URL para iframe
+```
+
+## 🔄 Fluxo Completo de Assinatura
+
+### Passo 1: Upload do Documento
+```python
+upload_result = d4sign_service.upload_document(contrato.arquivo_contrato)
+doc_key = upload_result['doc_key']
+```
+
+### Passo 2: Criar Envelope
+```python
+envelope_result = d4sign_service.create_envelope(contrato, doc_key)
+envelope_id = envelope_result['envelope_id']
+```
+
+### Passo 3: Enviar para Assinatura
+- O D4Sign envia email automaticamente para o inquilino
+- O inquilino acessa o link e assina digitalmente
+- O sistema recebe notificação via webhook (se configurado)
+
+### Passo 4: Verificar Status
+```python
+status_result = d4sign_service.check_signature_status(contrato)
+if status_result['status'] == 'assinado':
+    # Contrato foi assinado
+    # Enviar credenciais automaticamente
+```
 
 ## 📧 Configuração de Email
 
-O sistema usa o email configurado para enviar notificações sobre assinaturas:
+### Variáveis de Ambiente para Email
+```bash
+# Configuração SMTP
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=seu_email@gmail.com
+SMTP_PASSWORD=sua_senha_app
+SMTP_USE_TLS=True
 
-- **Email de Envio**: Configurado nas variáveis de ambiente
-- **Templates**: Personalizados para cada tipo de notificação
-- **Logs**: Todas as notificações são registradas
+# Email do administrador
+ADMIN_EMAIL=admin@seudominio.com
+```
 
-## 🔍 Monitoramento
+### Templates de Email
 
-### Logs do Sistema
-- Verifique os logs para acompanhar o processo
-- Erros são registrados com detalhes
-- Status das assinaturas é atualizado automaticamente
+O sistema envia emails automáticos para:
+- ✅ Notificação de contrato enviado para assinatura
+- ✅ Lembrete de assinatura pendente
+- ✅ Confirmação de assinatura realizada
+- ✅ Credenciais de acesso (quando aplicável)
 
-### Dashboard
-- Acesse `/dashboard` para ver estatísticas
-- Status dos contratos é exibido em tempo real
-- Notificações automáticas são enviadas
+## 🔗 Webhooks (Opcional)
 
-## 🚨 Solução de Problemas
+### Configurar Webhook
 
-### Erro: "D4Sign não está configurado"
+1. Crie uma rota no seu servidor:
+```python
+@app.route('/webhook/d4sign', methods=['POST'])
+def d4sign_webhook():
+    data = request.json
+    # Processar notificação do D4Sign
+    return jsonify({'success': True})
+```
+
+2. Registre o webhook:
+```python
+webhook_url = "https://seudominio.com/webhook/d4sign"
+d4sign_service.create_webhook(webhook_url)
+```
+
+### Eventos de Webhook
+- `envelope_signed`: Contrato foi assinado
+- `envelope_cancelled`: Assinatura foi cancelada
+- `envelope_expired`: Envelope expirou
+
+## 🌐 Embed D4Sign
+
+### Exibir Documento no Website
+
+```html
+<!-- Exibir documento para assinatura -->
+<iframe src="{{ embed_url }}" width="100%" height="600px"></iframe>
+```
+
+### Implementação no Sistema
+
+```python
+@app.route('/visualizar_contrato_embed/<int:contrato_id>')
+def visualizar_contrato_embed(contrato_id):
+    contrato = Contrato.query.get_or_404(contrato_id)
+    
+    if contrato.envelope_id:
+        result = d4sign_service.get_embed_url(contrato.envelope_id)
+        if result['success']:
+            return render_template('visualizar_contrato_embed.html', 
+                                contrato=contrato, 
+                                embed_url=result['embed_url'])
+    
+    flash('Contrato não possui envelope de assinatura.', 'warning')
+    return redirect(url_for('listar_contratos'))
+```
+
+## 🔒 Segurança
+
+### Validação de Documentos
+- ✅ Verificação de integridade do PDF
+- ✅ Validação de assinatura digital
+- ✅ Log de todas as operações
+- ✅ Backup automático de documentos
+
+### Controle de Acesso
+- ✅ Apenas inquilinos autorizados podem assinar
+- ✅ Verificação de email do signatário
+- ✅ Timeout automático de envelopes
+- ✅ Cancelamento de assinaturas
+
+## 📊 Monitoramento
+
+### Logs de Atividade
+```python
+# Verificar logs do D4Sign
+@app.route('/logs_d4sign')
+def logs_d4sign():
+    logs = d4sign_service.get_activity_logs()
+    return render_template('logs_d4sign.html', logs=logs)
+```
+
+### Estatísticas
+- 📈 Total de contratos enviados
+- ✅ Contratos assinados
+- ❌ Contratos cancelados
+- ⏰ Tempo médio de assinatura
+
+## 🛠️ Troubleshooting
+
+### Problemas Comuns
+
+**1. "D4Sign não configurado"**
 - Verifique se as variáveis de ambiente estão configuradas
-- Confirme se o token e safe key estão corretos
+- Confirme se o arquivo `.env` existe
+- Reinicie o servidor após configurar
 
-### Erro: "Falha no upload do documento"
-- Verifique a conexão com a internet
-- Confirme se o arquivo PDF existe
-- Verifique as permissões do arquivo
+**2. "Erro de conexão com API"**
+- Verifique se as credenciais estão corretas
+- Confirme se está usando o ambiente correto (sandbox/production)
+- Verifique a conectividade com a internet
 
-### Email não recebido
-- Verifique a configuração de email
-- Confirme se o email do inquilino está correto
-- Verifique a pasta de spam
+**3. "Arquivo não encontrado"**
+- Confirme se o PDF do contrato foi gerado
+- Verifique se o caminho do arquivo está correto
+- Gere novamente o contrato se necessário
+
+**4. "Email não enviado"**
+- Verifique se o inquilino tem email cadastrado
+- Confirme a configuração SMTP
+- Teste o envio de email manualmente
+
+### Logs de Debug
+
+Ative logs detalhados:
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
 
 ## 📞 Suporte
 
-Para problemas com o D4Sign:
-- Documentação: [https://docs.d4sign.com.br](https://docs.d4sign.com.br)
-- Suporte: [https://www.d4sign.com.br/suporte](https://www.d4sign.com.br/suporte)
+### Contatos D4Sign
+- **Comercial**: comercial@d4sign.com.br
+- **Suporte**: suporte@d4sign.com.br
+- **Documentação**: https://docs.d4sign.com.br
 
-Para problemas com o sistema:
-- Verifique os logs do sistema
-- Confirme as configurações de ambiente
-- Teste a conectividade com a API
+### Limites da API
+- **Padrão**: 10 requisições por hora
+- **Para aumentar**: Entre em contato com o comercial
+- **Suporte 24/7**: Disponível para contas pagas
 
-## 🔄 Próximos Passos
+## 🎯 Próximos Passos
 
-1. **Configurar as variáveis de ambiente**
-2. **Testar o envio de um contrato**
-3. **Verificar o recebimento do email**
-4. **Testar o processo de assinatura**
-5. **Monitorar os logs do sistema**
+1. **Configure as credenciais reais** do D4Sign
+2. **Teste com documentos reais** de contratos
+3. **Implemente webhooks** para notificações automáticas
+4. **Configure o ambiente de produção**
+5. **Treine os usuários** no uso da assinatura digital
+
+## ✅ Checklist de Configuração
+
+- [ ] Criar conta D4Sign (sandbox/production)
+- [ ] Obter credenciais de API
+- [ ] Configurar variáveis de ambiente
+- [ ] Testar conexão com API
+- [ ] Testar upload de documentos
+- [ ] Testar criação de envelopes
+- [ ] Configurar webhooks (opcional)
+- [ ] Testar fluxo completo
+- [ ] Configurar emails automáticos
+- [ ] Treinar usuários
 
 ---
 
-**Nota**: Este sistema mantém os contratos como PDF conforme sua preferência, garantindo que todos os documentos sejam preservados no formato original. 
+**🎉 Parabéns!** Sua integração com D4Sign está pronta para uso! 

@@ -987,8 +987,7 @@ def enviar_para_assinatura(contrato_id):
         return redirect(url_for('listar_contratos'))
     
     # Verificar se arquivo existe
-    file_path = os.path.join(os.getcwd(), contrato.arquivo_contrato)
-    if not os.path.exists(file_path):
+    if not os.path.exists(contrato.arquivo_contrato):
         flash('Arquivo do contrato não encontrado. Gere novamente o contrato.', 'warning')
         return redirect(url_for('listar_contratos'))
     
@@ -1006,7 +1005,7 @@ def enviar_para_assinatura(contrato_id):
     
     return redirect(url_for('listar_contratos'))
 
-# @app.route('/verificar_status_assinatura/<int:contrato_id>')
+@app.route('/verificar_status_assinatura/<int:contrato_id>')
 def verificar_status_assinatura(contrato_id):
     """Verifica status da assinatura digital e envia credenciais automaticamente"""
     contrato = Contrato.query.get_or_404(contrato_id)
@@ -1016,34 +1015,35 @@ def verificar_status_assinatura(contrato_id):
         return redirect(url_for('listar_contratos'))
     
     try:
-        ds4 = get_ds4_instance()
-        status_result = ds4.check_signature_status(contrato)
+        # Verificar status via D4Sign
+        status_result = d4sign_service.check_signature_status(contrato)
         
-        if status_result['status'] == 'completed':
-            # Contrato foi assinado - enviar credenciais automaticamente
-            inquilino = contrato.inquilino
-            
-            # Verificar se o inquilino já tem login
-            if not inquilino.username:
-                # Gerar credenciais automáticas seguras
-                username, senha = gerar_credenciais_automaticas(inquilino)
+        if status_result['success']:
+            if status_result['status'] == 'assinado':
+                # Contrato foi assinado - enviar credenciais automaticamente
+                inquilino = contrato.inquilino
                 
-                # Criar login e enviar credenciais
-                success, message = criar_login_inquilino(inquilino.id, username, senha)
-                
-                if success:
-                    flash('Contrato assinado! Credenciais de acesso enviadas automaticamente para o inquilino.', 'success')
+                # Verificar se o inquilino já tem login
+                if not inquilino.username:
+                    # Gerar credenciais automáticas seguras
+                    username, senha = gerar_credenciais_automaticas(inquilino)
+                    
+                    # Criar login e enviar credenciais
+                    success, message = criar_login_inquilino(inquilino.id, username, senha)
+                    
+                    if success:
+                        flash('Contrato assinado! Credenciais de acesso enviadas automaticamente para o inquilino.', 'success')
+                    else:
+                        flash('Contrato assinado! Erro ao enviar credenciais.', 'warning')
                 else:
-                    flash('Contrato assinado! Erro ao enviar credenciais.', 'warning')
+                    flash('Contrato foi assinado digitalmente!', 'success')
+                    
+            elif status_result['status'] == 'enviado':
+                flash('Contrato aguardando assinatura do inquilino.', 'info')
             else:
-                flash('Contrato foi assinado digitalmente!', 'success')
-                
-        elif status_result['status'] == 'sent':
-            flash('Contrato aguardando assinatura do inquilino.', 'info')
-        elif status_result['status'] == 'delivered':
-            flash('Contrato entregue ao inquilino.', 'info')
+                flash(f'Status da assinatura: {status_result["status"]}', 'info')
         else:
-            flash(f'Status da assinatura: {status_result["status"]}', 'info')
+            flash(f'Erro ao verificar status: {status_result["message"]}', 'danger')
             
     except Exception as e:
         flash(f'Erro ao verificar status: {str(e)}', 'danger')
@@ -1078,7 +1078,7 @@ def visualizar_contrato_assinado(contrato_id):
     # Se não for para download, mostrar a página de visualização
     return render_template('visualizar_contrato_assinado.html', contrato=contrato)
 
-# @app.route('/cancelar_assinatura/<int:contrato_id>')
+@app.route('/cancelar_assinatura/<int:contrato_id>')
 def cancelar_assinatura(contrato_id):
     """Cancela processo de assinatura digital"""
     contrato = Contrato.query.get_or_404(contrato_id)
@@ -1088,11 +1088,13 @@ def cancelar_assinatura(contrato_id):
         return redirect(url_for('listar_contratos'))
     
     try:
-        ds4 = get_ds4_instance()
-        # Implementar cancelamento no DS4
-        contrato.situacao_assinatura = 'cancelado'
-        db.session.commit()
-        flash('Processo de assinatura cancelado.', 'success')
+        # Cancelar via D4Sign
+        result = d4sign_service.cancel_signature_process(contrato)
+        
+        if result['success']:
+            flash('Processo de assinatura cancelado com sucesso.', 'success')
+        else:
+            flash(f'Erro ao cancelar assinatura: {result["message"]}', 'danger')
         
     except Exception as e:
         flash(f'Erro ao cancelar assinatura: {str(e)}', 'danger')
@@ -1537,9 +1539,9 @@ def alterar_status_unidade(unidade_id, status):
     
     return redirect(url_for('gerenciar_unidades', local_id=unidade.local_id))
 
-# Dashboard avançado com gráficos
+# Dashboard básico (mantido para compatibilidade)
 @app.route('/dashboard')
-def dashboard_avancado():
+def dashboard_basico():
     from datetime import datetime, timedelta
     from sqlalchemy import func
     
@@ -1841,3 +1843,95 @@ def limpar_historico():
     
     flash(f'Removidos {registros_removidos} registros de histórico com mais de {dias} dias.', 'success')
     return redirect(url_for('historico'))
+
+# ===== DASHBOARD AVANÇADO =====
+
+@app.route('/dashboard_avancado')
+def dashboard_avancado():
+    # Estatísticas gerais
+    contratos = Contrato.query.all()
+    inquilinos = Inquilino.query.all()
+    locais = Local.query.all()
+    unidades = Unidade.query.all()
+    boletos = Boleto.query.all()
+    
+    # Cálculos financeiros
+    receita_total = sum(c.valor_aluguel for c in contratos if c.situacao == 'Ativo')
+    contratos_ativos = Contrato.query.filter_by(situacao='Ativo').count()
+    boletos_pendentes = Boleto.query.filter_by(status='Pendente').count()
+    valor_pendente = sum(b.valor for b in boletos if b.status == 'Pendente')
+    
+    # Taxa de ocupação
+    total_unidades = len(unidades)
+    unidades_ocupadas = sum(1 for u in unidades if u.status == 'ocupada')
+    taxa_ocupacao = (unidades_ocupadas / total_unidades * 100) if total_unidades > 0 else 0
+    
+    # Taxa de inadimplência
+    contratos_vencidos = Contrato.query.filter_by(situacao='Vencido').count()
+    total_contratos = len(contratos)
+    taxa_inadimplencia = (contratos_vencidos / total_contratos * 100) if total_contratos > 0 else 0
+    
+    # Crescimento da receita (simulado)
+    crescimento_receita = 12.5  # Simulado
+    
+    # Receita mensal (últimos 12 meses - simulado)
+    receita_mensal = [
+        {'mes': 'Jan', 'valor': 8500},
+        {'mes': 'Fev', 'valor': 9200},
+        {'mes': 'Mar', 'valor': 8800},
+        {'mes': 'Abr', 'valor': 9500},
+        {'mes': 'Mai', 'valor': 10200},
+        {'mes': 'Jun', 'valor': 9800},
+        {'mes': 'Jul', 'valor': 10500},
+        {'mes': 'Ago', 'valor': 11200},
+        {'mes': 'Set', 'valor': 10800},
+        {'mes': 'Out', 'valor': 11500},
+        {'mes': 'Nov', 'valor': 12200},
+        {'mes': 'Dez', 'valor': 11800}
+    ]
+    receita_maxima = max(mes['valor'] for mes in receita_mensal)
+    receita_media = sum(mes['valor'] for mes in receita_mensal) / len(receita_mensal)
+    
+    # Receita por local
+    receita_por_local = []
+    cores = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4']
+    for i, local in enumerate(locais):
+        receita_local = sum(c.valor_aluguel for c in contratos if c.unidade.local_id == local.id and c.situacao == 'Ativo')
+        receita_por_local.append({
+            'nome': local.nome,
+            'valor': receita_local,
+            'cor': cores[i % len(cores)]
+        })
+    
+    # Top 5 locais
+    top_locais = sorted(receita_por_local, key=lambda x: x['valor'], reverse=True)[:5]
+    for local in top_locais:
+        local['contratos'] = sum(1 for c in contratos if c.unidade.local.nome == local['nome'] and c.situacao == 'Ativo')
+        local['crescimento'] = 15.2  # Simulado
+    
+    # Boletos vencendo
+    boletos_vencendo = []
+    for boleto in boletos[:10]:  # Top 10
+        dias_vencimento = (boleto.data_vencimento - datetime.now().date()).days
+        boletos_vencendo.append({
+            'inquilino': boleto.contrato.inquilino.nome,
+            'local': f"{boleto.contrato.unidade.local.nome} - {boleto.contrato.unidade.nome}",
+            'valor': boleto.valor,
+            'dias_vencimento': dias_vencimento
+        })
+    
+    return render_template('dashboard_avancado.html',
+                         receita_total=receita_total,
+                         contratos_ativos=contratos_ativos,
+                         boletos_pendentes=boletos_pendentes,
+                         valor_pendente=valor_pendente,
+                         taxa_ocupacao=taxa_ocupacao,
+                         taxa_inadimplencia=taxa_inadimplencia,
+                         crescimento_receita=crescimento_receita,
+                         receita_mensal=receita_mensal,
+                         receita_maxima=receita_maxima,
+                         receita_media=receita_media,
+                         receita_por_local=receita_por_local,
+                         top_locais=top_locais,
+                         boletos_vencendo=boletos_vencendo,
+                         contratos_vencidos=contratos_vencidos)
