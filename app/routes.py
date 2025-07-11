@@ -7,7 +7,7 @@ import os
 import secrets
 import string
 import json
-# # # # # from app.contract_generator import ContractGenerator  # Removido  # Removido  # Removido  # Arquivo removido
+# # # # # # from app.contract_generator import ContractGenerator  # Removido  # Removido  # Removido  # Removido  # Arquivo removido
 # from app.ds4_simulado import get_ds4_instance  # Arquivo removido
 from app.email_service import email_service
 from app.backup_service import BackupService
@@ -629,7 +629,7 @@ def cadastrar_contrato():
             
             # Gerar contrato automaticamente
             try:
-                # # from app.contract_generator import ContractGenerator  # Removido  # Removido
+                # # # from app.contract_generator import ContractGenerator  # Removido  # Removido  # Removido
                 generator = ContractGenerator()
                 
                 # Gerar PDF do contrato
@@ -960,7 +960,7 @@ def visualizar_contrato(contrato_id):
 def regenerar_contrato(contrato_id):
     contrato = Contrato.query.get_or_404(contrato_id)
     try:
-        # # from app.contract_generator import ContractGenerator  # Removido  # Removido
+        # # # from app.contract_generator import ContractGenerator  # Removido  # Removido  # Removido
         generator = ContractGenerator()
         
         # Gerar PDF do contrato

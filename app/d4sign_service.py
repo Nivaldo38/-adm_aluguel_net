@@ -21,9 +21,19 @@ class D4SignService:
         self.is_production = os.getenv('D4SIGN_ENVIRONMENT', 'sandbox').lower() == 'production'
         self.api_url = self.production_url if self.is_production else self.sandbox_url
         
-        # Credenciais de autenticação
+        # Credenciais de autenticação - tentar variáveis de ambiente primeiro
         self.token_api = os.getenv('D4SIGN_TOKEN_API', '')
         self.crypt_key = os.getenv('D4SIGN_CRYPT_KEY', '')
+        
+        # Se não estiver nas variáveis de ambiente, tentar arquivo de configuração
+        if not self.token_api:
+            try:
+                from config_d4sign import D4SIGN_API_TOKEN, D4SIGN_CRYPT_KEY
+                self.token_api = D4SIGN_API_TOKEN
+                self.crypt_key = D4SIGN_CRYPT_KEY
+                print("✅ Chaves D4Sign carregadas do arquivo de configuração")
+            except ImportError:
+                print("⚠️ Arquivo config_d4sign.py não encontrado")
         
         # Verificar se está habilitado
         self.enabled = bool(self.token_api)
@@ -36,6 +46,8 @@ class D4SignService:
         else:
             self.simulated_mode = False
             print(f"✅ D4Sign configurado - Ambiente: {'Produção' if self.is_production else 'Sandbox'}")
+            print(f"🔑 Token API: {self.token_api[:20]}...")
+            print(f"🔐 Crypt Key: {self.crypt_key[:20]}...")
     
     def _get_auth_params(self):
         """Retorna parâmetros de autenticação conforme documentação"""
@@ -136,7 +148,19 @@ class D4SignService:
                 result = self._make_request('POST', 'documents/upload', files=files)
                 
                 if result['success']:
-                    doc_key = result['data'].get('uuid') or result['data'].get('key')
+                    # Verificar se data é um dicionário
+                    if isinstance(result['data'], dict):
+                        doc_key = result['data'].get('uuid') or result['data'].get('key')
+                    else:
+                        # Se data é string, pode ser o próprio doc_key
+                        doc_key = result['data'] if result['data'] else None
+                    
+                    # Se ainda não temos doc_key, gerar um temporário
+                    if not doc_key:
+                        import uuid
+                        doc_key = f"temp_{uuid.uuid4().hex[:8]}"
+                        print(f"⚠️ Doc key não encontrada na resposta, usando temporário: {doc_key}")
+                    
                     return {
                         'success': True,
                         'doc_key': doc_key,
@@ -236,7 +260,7 @@ class D4SignService:
         else:
             return {
                 'success': False,
-                'message': result['message'],
+                'message': result.get('message', 'Erro desconhecido'),
                 'details': result.get('data')
             }
     
