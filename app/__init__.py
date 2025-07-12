@@ -27,7 +27,10 @@ if os.getenv('RAILWAY_ENVIRONMENT') == 'production' or os.getenv('DATABASE_URL')
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     print("✅ Usando PostgreSQL no Railway")
-    print(f"🔗 Database URL: {database_url[:50]}...")
+    if database_url:
+        print(f"🔗 Database URL: {database_url[:50]}...")
+    else:
+        print("⚠️ DATABASE_URL não configurada")
 else:
     # Usar SQLite local para desenvolvimento
     basedir = os.path.abspath(os.path.dirname(__file__))
