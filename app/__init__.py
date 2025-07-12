@@ -8,6 +8,11 @@ print("🚀 Iniciando aplicação Flask...")
 app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave_secreta_segura')
 
+# Endpoint de healthcheck simples para o Railway
+@app.route('/health')
+def health_check():
+    return 'OK', 200
+
 print("📊 Configurando banco de dados...")
 
 # Configuração do banco de dados
@@ -22,11 +27,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # evitar warning
 print("🔧 Inicializando SQLAlchemy...")
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # adiciona o Flask-Migrate
-
-# Endpoint de healthcheck para o Railway
-@app.route('/health')
-def health_check():
-    return {'status': 'healthy'}, 200
 
 print("📁 Importando rotas e modelos...")
 try:
