@@ -23,6 +23,11 @@ print("🔧 Inicializando SQLAlchemy...")
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # adiciona o Flask-Migrate
 
+# Endpoint de healthcheck para o Railway
+@app.route('/health')
+def health_check():
+    return {'status': 'healthy'}, 200
+
 print("📁 Importando rotas e modelos...")
 try:
     from app import routes, models
