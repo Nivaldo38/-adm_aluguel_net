@@ -12,18 +12,27 @@ def health_check():
     return 'OK', 200
 
 # Endpoint de healthcheck alternativo
-@app.route('/')
-def home():
+@app.route('/healthcheck')
+def health_check_alt():
     return 'Sistema funcionando!', 200
 
 print("📊 Configurando banco de dados...")
 
 # Configuração do banco de dados
-# Forçar uso do banco local para desenvolvimento
-basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, '..', 'adm_aluguel.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-print("✅ Usando banco SQLite local")
+# Verificar se estamos em produção (Railway)
+if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+    # Usar PostgreSQL no Railway
+    database_url = os.getenv('DATABASE_URL')
+    if database_url and database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    print("✅ Usando PostgreSQL no Railway")
+else:
+    # Usar SQLite local para desenvolvimento
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(basedir, '..', 'adm_aluguel.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+    print("✅ Usando banco SQLite local")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # evitar warning
 

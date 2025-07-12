@@ -28,5 +28,15 @@
       "size_mb": 0.06925010681152344,
       "hash": "c450d03285c583ddfeffb3f56d6ceeece62258355cc47d4ea6e7ac00b696d22b"
     }
+  },
+  {
+    "operation": "create",
+    "file": "backup_20250711_232508.zip",
+    "timestamp": "2025-07-11T23:25:08.206769",
+    "info": {
+      "timestamp": "2025-07-11T23:25:08.158587",
+      "size_mb": 0.06925010681152344,
+      "hash": "13038a7cbfd3b312c2f05921a40be0b4ba680787560895f5972fb793f9dc8748"
+    }
   }
 ]
