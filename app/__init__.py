@@ -1,17 +1,20 @@
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 
 print("🚀 Iniciando aplicação Flask...")
 
 app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave_secreta_segura')
 
-# Endpoint de healthcheck simples para o Railway
+# Endpoint de healthcheck ultra simples para o Railway
 @app.route('/health')
 def health_check():
     return 'OK', 200
+
+# Endpoint de healthcheck alternativo
+@app.route('/')
+def home():
+    return 'Sistema funcionando!', 200
 
 print("📊 Configurando banco de dados...")
 
@@ -25,6 +28,9 @@ print("✅ Usando banco SQLite local")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # evitar warning
 
 print("🔧 Inicializando SQLAlchemy...")
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)  # adiciona o Flask-Migrate
 
