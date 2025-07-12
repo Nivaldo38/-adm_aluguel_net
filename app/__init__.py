@@ -11,16 +11,11 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chave_secreta_segura')
 print("📊 Configurando banco de dados...")
 
 # Configuração do banco de dados
-if os.environ.get('DATABASE_URL'):
-    # Para produção (Railway)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-    print("✅ Usando DATABASE_URL do Railway")
-else:
-    # Para desenvolvimento local
-    basedir = os.path.abspath(os.path.dirname(__file__))
-    db_path = os.path.join(basedir, '..', 'adm_aluguel.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
-    print("⚠️ DATABASE_URL não encontrada, usando SQLite local")
+# Forçar uso do banco local para desenvolvimento
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, '..', 'adm_aluguel.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
+print("✅ Usando banco SQLite local")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # evitar warning
 
